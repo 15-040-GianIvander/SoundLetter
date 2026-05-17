@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.soundletter.app.domain.model.Note
 import com.soundletter.app.presentation.screens.home.MessageCard
 import com.soundletter.app.presentation.theme.SoundLetterColors
 import org.koin.compose.viewmodel.koinViewModel
@@ -24,7 +25,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun SearchScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    viewModel: SearchViewModel = koinViewModel()
+    viewModel: SearchScreenViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -71,8 +72,8 @@ fun SearchScreen(
                     contentPadding = PaddingValues(24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.results) { message ->
-                        MessageCard(message = message, onClick = { onNavigateToDetail(message.id) })
+                    items(state.results) { note: Note ->
+                        MessageCard(message = note, onClick = { onNavigateToDetail(note.id.toString()) })
                     }
                 }
             }

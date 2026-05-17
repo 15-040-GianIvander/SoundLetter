@@ -33,7 +33,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun DetailMessageScreen(
     messageId: String,
     onNavigateBack: () -> Unit,
-    viewModel: DetailViewModel = koinViewModel()
+    viewModel: DetailMessageScreenViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -77,7 +77,7 @@ fun DetailMessageScreen(
                     GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column {
                             Text(
-                                text = "To: ${message.to}",
+                                text = "To: ${message.recipient}",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -91,7 +91,7 @@ fun DetailMessageScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "— From ${message.from}",
+                                text = "— From ${message.sender}",
                                 style = MaterialTheme.typography.labelMedium.copy(color = Color.Gray),
                                 modifier = Modifier.align(Alignment.End)
                             )
@@ -103,7 +103,11 @@ fun DetailMessageScreen(
                     MusicControls(message.songTitle ?: "Unknown Song")
                 }
             } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                if (state.isLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    Text("Message not found", color = Color.White)
+                }
             }
         }
     }

@@ -2,6 +2,7 @@ package com.soundletter.app
 
 import android.app.Application
 import com.soundletter.app.di.appModule
+import com.soundletter.app.di.platformModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -12,7 +13,7 @@ class SoundLetterApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@SoundLetterApplication)
-            modules(appModule)
+            modules(appModule + platformModule)
         }
     }
 }

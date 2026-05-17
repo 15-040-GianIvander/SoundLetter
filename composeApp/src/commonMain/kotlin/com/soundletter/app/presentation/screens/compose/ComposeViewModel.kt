@@ -2,6 +2,8 @@ package com.soundletter.app.presentation.screens.compose
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.soundletter.app.domain.repository.LetterRepository
+import com.soundletter.app.domain.repository.MusicRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +19,10 @@ data class ComposeState(
     val isAiLoading: Boolean = false
 )
 
-class ComposeViewModel : ViewModel() {
+class ComposeViewModel(
+    private val letterRepository: LetterRepository,
+    private val musicRepository: MusicRepository
+) : ViewModel() {
     private val _state = MutableStateFlow(ComposeState())
     val state: StateFlow<ComposeState> = _state.asStateFlow()
 
@@ -28,11 +33,11 @@ class ComposeViewModel : ViewModel() {
     fun recommendSongs() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isAiLoading = true)
+            // Simulation
             _state.value = _state.value.copy(
                 suggestions = listOf(
                     SongSuggestion("Starboy", "The Weeknd"),
-                    SongSuggestion("Midnight City", "M83"),
-                    SongSuggestion("Blinding Lights", "The Weeknd")
+                    SongSuggestion("Midnight City", "M83")
                 ),
                 isAiLoading = false
             )

@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.soundletter.app.domain.model.Note
 import com.soundletter.app.presentation.components.GlassCard
 import com.soundletter.app.presentation.theme.SoundLetterColors
 import org.koin.compose.viewmodel.koinViewModel
@@ -31,7 +32,7 @@ fun HomeScreen(
     onNavigateToDetail: (String) -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToHistory: () -> Unit,
-    viewModel: HomeViewModel = koinViewModel()
+    viewModel: HomeScreenViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -95,8 +96,8 @@ fun HomeScreen(
                     contentPadding = PaddingValues(24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.messages) { message ->
-                        MessageCard(message = message, onClick = { onNavigateToDetail(message.id) })
+                    items(state.letters) { letter ->
+                        MessageCard(message = letter, onClick = { onNavigateToDetail(letter.id.toString()) })
                     }
                 }
             }
@@ -105,7 +106,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun MessageCard(message: Message, onClick: () -> Unit) {
+fun MessageCard(message: Note, onClick: () -> Unit) {
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -117,14 +118,14 @@ fun MessageCard(message: Message, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "To: ${message.to}",
+                    text = "To: ${message.recipient}",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 )
                 Text(
-                    text = "From: ${message.from}",
+                    text = "From: ${message.sender}",
                     style = MaterialTheme.typography.bodySmall.copy(color = Color.LightGray)
                 )
             }

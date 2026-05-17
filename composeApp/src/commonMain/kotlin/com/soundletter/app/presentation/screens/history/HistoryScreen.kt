@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.soundletter.app.domain.model.Note
 import com.soundletter.app.presentation.screens.home.MessageCard
 import com.soundletter.app.presentation.theme.SoundLetterColors
 import org.koin.compose.viewmodel.koinViewModel
@@ -24,7 +25,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun HistoryScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    viewModel: HistoryViewModel = koinViewModel()
+    viewModel: HistoryScreenViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -52,7 +53,7 @@ fun HistoryScreen(
         ) {
             if (state.historyMessages.isEmpty() && !state.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No history yet.", color = Color.Gray)
+                    Text("No history yet.", color = Color.White)
                 }
             } else {
                 LazyColumn(
@@ -60,8 +61,8 @@ fun HistoryScreen(
                     contentPadding = PaddingValues(24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.historyMessages) { message ->
-                        MessageCard(message = message, onClick = { onNavigateToDetail(message.id) })
+                    items(state.historyMessages) { note: Note ->
+                        MessageCard(message = note, onClick = { onNavigateToDetail(note.id.toString()) })
                     }
                 }
             }
