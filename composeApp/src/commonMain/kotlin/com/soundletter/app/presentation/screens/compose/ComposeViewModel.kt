@@ -52,6 +52,12 @@ class ComposeViewModel(
     }
 
     fun sendSoundLetter(to: String, from: String, message: String, songTitle: String?) {
+        // Validasi: To dan Message tidak boleh kosong
+        if (to.isBlank() || message.isBlank()) {
+            _state.update { it.copy(sendStatus = UiState.Error("Recipient and message cannot be empty")) }
+            return
+        }
+
         viewModelScope.launch {
             _state.update { it.copy(sendStatus = UiState.Loading) }
             try {
@@ -67,10 +73,8 @@ class ComposeViewModel(
                 // 1. Simpan ke Lokal (History) via Repository
                 letterRepository.sendLetter(newNote)
 
-                // 2. TODO: Simpan ke Firebase Firestore (Remote)
-                // Implementasi Firestore SDK di KMP biasanya membutuhkan wrapper atau expect/actual
                 // Simulasi delay network
-                kotlinx.coroutines.delay(1000)
+                kotlinx.coroutines.delay(500)
 
                 _state.update { it.copy(sendStatus = UiState.Success(Unit)) }
             } catch (e: Exception) {
