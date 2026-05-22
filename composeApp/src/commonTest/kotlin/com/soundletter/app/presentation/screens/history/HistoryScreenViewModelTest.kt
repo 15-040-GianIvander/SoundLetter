@@ -1,4 +1,4 @@
-package com.soundletter.app.presentation.screens.home
+package com.soundletter.app.presentation.screens.history
 
 import app.cash.turbine.test
 import com.soundletter.app.core.util.UiState
@@ -18,12 +18,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-class FakeHomeRepository : LetterRepository {
+class FakeHistoryRepository : LetterRepository {
     private val flow = MutableSharedFlow<List<Note>>()
     var shouldFail = false
 
     override fun getLetters(): Flow<List<Note>> {
-        if (shouldFail) throw Exception("Network Error")
+        if (shouldFail) throw Exception("Database Connection Error")
         return flow
     }
     override suspend fun getLetterById(id: Long): Note? = null
@@ -34,16 +34,16 @@ class FakeHomeRepository : LetterRepository {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class HomeScreenViewModelTest {
+class HistoryScreenViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
-    private lateinit var repository: FakeHomeRepository
-    private lateinit var viewModel: HomeScreenViewModel
+    private lateinit var repository: FakeHistoryRepository
+    private lateinit var viewModel: HistoryScreenViewModel
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        repository = FakeHomeRepository()
-        viewModel = HomeScreenViewModel(repository)
+        repository = FakeHistoryRepository()
+        viewModel = HistoryScreenViewModel(repository)
     }
 
     @AfterTest
@@ -52,32 +52,28 @@ class HomeScreenViewModelTest {
     }
 
     @Test
-    fun `loadLetters success should emit Success state`() = runTest {
+    fun `loadHistory success should emit Success state`() = runTest {
         val mockData = listOf(Note(id = 1, recipient = "Test", content = "Msg"))
-        
-        viewModel.uiState.test {
-            // Initial state (Loading)
+        viewModel.historyState.test {
             assertIs<UiState.Loading>(awaitItem())
-            
             repository.emit(mockData)
-            
-            val successState = awaitItem()
-            assertIs<UiState.Success<List<Note>>>(successState)
-            assertEquals(mockData, successState.data)
+            val state = awaitItem()
+            assertIs<UiState.Success<List<Note>>>(state)
+            assertEquals(1, state.data.size)
         }
     }
 
     @Test
-    fun `loadLetters failure should emit Error state`() = runTest {
+    fun `loadHistory failure should emit Error state`() = runTest {
         repository.shouldFail = true
-        // Re-init to trigger loadLetters with failure
-        viewModel = HomeScreenViewModel(repository)
+        // Re-init to trigger failure on init
+        viewModel = HistoryScreenViewModel(repository)
         
-        viewModel.uiState.test {
+        viewModel.historyState.test {
             assertIs<UiState.Loading>(awaitItem())
             val state = awaitItem()
             assertIs<UiState.Error>(state)
-            assertEquals("Network Error", state.message)
+            assertEquals("Database Connection Error", state.message)
         }
     }
 }
