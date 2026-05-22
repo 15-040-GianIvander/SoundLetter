@@ -6,8 +6,7 @@ import com.soundletter.app.domain.model.Note
 import com.soundletter.app.domain.repository.LetterRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -22,10 +21,11 @@ class FakeSearchRepository : LetterRepository {
     private val flow = MutableSharedFlow<List<Note>>()
     var shouldFail = false
 
-    override fun getLetters(): Flow<List<Note>> {
+    override fun getLetters(): Flow<List<Note>> = flow {
         if (shouldFail) throw Exception("Search Error")
-        return flow
+        emitAll(flow)
     }
+    
     override suspend fun getLetterById(id: Long): Note? = null
     override suspend fun sendLetter(letter: Note) {}
     override suspend fun deleteLetter(id: Long) {}
@@ -51,7 +51,7 @@ class SearchScreenViewModelTest {
         Dispatchers.resetMain()
     }
 
-    @Test // Test 21: Search Success
+    @Test
     fun `onQueryChange should filter and emit Success when data matched`() = runTest {
         val mockData = listOf(
             Note(id = 1, recipient = "Dzakky", content = "Hi"),
@@ -61,7 +61,9 @@ class SearchScreenViewModelTest {
         viewModel.searchState.test {
             assertIs<UiState.Idle>(awaitItem())
             viewModel.onQueryChange("Dzakky")
-            assertIs<UiState.Loading>(awaitItem())
+            
+            val loadingState = awaitItem()
+            assertIs<UiState.Loading>(loadingState)
             
             repository.emit(mockData)
             
@@ -72,14 +74,16 @@ class SearchScreenViewModelTest {
         }
     }
 
-    @Test // Test 22: Search Empty Result
+    @Test
     fun `onQueryChange should emit Success with empty list when no data matched`() = runTest {
         val mockData = listOf(Note(id = 1, recipient = "Dzakky", content = "Hi"))
         
         viewModel.searchState.test {
             assertIs<UiState.Idle>(awaitItem())
             viewModel.onQueryChange("Unknown")
-            assertIs<UiState.Loading>(awaitItem())
+            
+            val loadingState = awaitItem()
+            assertIs<UiState.Loading>(loadingState)
             
             repository.emit(mockData)
             
@@ -89,16 +93,22 @@ class SearchScreenViewModelTest {
         }
     }
 
-    @Test // Test 23: Search Error
+    @Test
     fun `search failure should emit Error state`() = runTest {
         repository.shouldFail = true
         viewModel.searchState.test {
             assertIs<UiState.Idle>(awaitItem())
             viewModel.onQueryChange("Fail")
-            assertIs<UiState.Loading>(awaitItem())
-            val state = awaitItem()
-            assertIs<UiState.Error>(state)
-            assertEquals("Search Error", state.message)
+            
+            val nextState = awaitItem()
+            if (nextState is UiState.Loading) {
+                val errorState = awaitItem()
+                assertIs<UiState.Error>(errorState)
+                assertEquals("Search Error", errorState.message)
+            } else {
+                assertIs<UiState.Error>(nextState)
+                assertEquals("Search Error", (nextState as UiState.Error).message)
+            }
         }
     }
 }

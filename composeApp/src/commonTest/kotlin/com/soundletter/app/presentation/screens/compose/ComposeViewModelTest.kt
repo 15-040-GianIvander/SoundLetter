@@ -23,9 +23,10 @@ import kotlin.test.assertTrue
 class FakeLetterRepo : LetterRepository {
     var shouldFail = false
     var wasSendCalled = false
+    var lastDeletedId: Long? = null
     override fun getLetters(): Flow<List<Note>> = flowOf(emptyList())
     override suspend fun getLetterById(id: Long): Note? = null
-    override suspend fun deleteLetter(id: Long) {}
+    override suspend fun deleteLetter(id: Long) { lastDeletedId = id }
     override suspend fun sendLetter(letter: Note) {
         wasSendCalled = true
         if (shouldFail) throw Exception("Network Error")
@@ -55,10 +56,10 @@ class ComposeViewModelTest {
 
     @Test
     fun `sendSoundLetter should reach Success state when repository succeeds`() = runTest {
-        viewModel.onToChange("Dzakky")
+        viewModel.onRecipientChange("Dzakky")
         viewModel.onMessageChange("Hello")
         
-        viewModel.sendSoundLetter("Dzakky", "Anon", "Hello", null)
+        viewModel.sendSoundLetter()
         
         assertIs<UiState.Success<Unit>>(viewModel.state.value.sendStatus)
         assertTrue(repository.wasSendCalled)
@@ -67,20 +68,26 @@ class ComposeViewModelTest {
     @Test
     fun `sendSoundLetter should return error state when repository fails`() = runTest {
         repository.shouldFail = true
-        viewModel.sendSoundLetter("To", "From", "Msg", null)
+        viewModel.onRecipientChange("To")
+        viewModel.onMessageChange("Msg")
+        
+        viewModel.sendSoundLetter()
         
         val status = viewModel.state.value.sendStatus
         assertIs<UiState.Error>(status)
-        assertEquals("Network Error", status.message)
+        assertEquals("Network Error", (status as UiState.Error).message)
     }
 
     @Test
     fun `sendSoundLetter should return error when recipient is blank`() = runTest {
-        viewModel.sendSoundLetter("", "From", "Msg", null)
+        viewModel.onRecipientChange("")
+        viewModel.onMessageChange("Msg")
+        
+        viewModel.sendSoundLetter()
         
         val status = viewModel.state.value.sendStatus
         assertIs<UiState.Error>(status)
-        assertEquals("Recipient and message cannot be empty", status.message)
+        assertEquals("Recipient and message cannot be empty", (status as UiState.Error).message)
         assertTrue(!repository.wasSendCalled)
     }
 
@@ -92,8 +99,33 @@ class ComposeViewModelTest {
     }
 
     @Test
+    fun `onSenderChange should update state correctly`() = runTest {
+        val sender = "John Doe"
+        viewModel.onSenderChange(sender)
+        assertEquals(sender, viewModel.state.value.sender)
+    }
+
+    @Test
+    fun `onSongSelect should update selected song in state`() = runTest {
+        val song = SongSuggestion("Starboy", "The Weeknd")
+        viewModel.onSongSelect(song)
+        assertEquals(song, viewModel.state.value.selectedSong)
+    }
+
+    @Test
     fun `recommendSongs should update suggestions`() = runTest {
-        viewModel.recommendSongs()
-        assertTrue(viewModel.state.value.suggestions.isNotEmpty())
+        viewModel.state.test {
+            awaitItem() // Initial state
+            viewModel.recommendSongs()
+            
+            // Collect Loading state
+            val loadingState = awaitItem()
+            assertTrue(loadingState.isAiLoading)
+            
+            // Collect Success state
+            val resultState = awaitItem()
+            assertTrue(resultState.suggestions.isNotEmpty())
+            assertTrue(!resultState.isAiLoading)
+        }
     }
 }
