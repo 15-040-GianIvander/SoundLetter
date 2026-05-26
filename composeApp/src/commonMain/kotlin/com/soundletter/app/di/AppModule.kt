@@ -1,5 +1,7 @@
 package com.soundletter.app.di
 
+import com.soundletter.app.core.network.ApiConfig
+import com.soundletter.app.core.network.GeminiService
 import com.soundletter.app.core.network.HttpClientFactory
 import com.soundletter.app.core.util.DatabaseDriverFactory
 import com.soundletter.app.data.local.SoundLetterDatabase
@@ -15,6 +17,9 @@ import com.soundletter.app.presentation.screens.history.HistoryScreenViewModel
 import com.soundletter.app.presentation.screens.home.HomeScreenViewModel
 import com.soundletter.app.presentation.screens.search.SearchScreenViewModel
 import com.soundletter.app.presentation.screens.splash.SplashScreenViewModel
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -26,10 +31,26 @@ val dataModule = module {
         SoundLetterDatabase(driverFactory.createDriver())
     }
     single { HttpClientFactory.create(enableLogging = true) }
+    
+    // Inisialisasi Supabase Client Singleton
+    single<SupabaseClient> {
+        createSupabaseClient(
+            supabaseUrl = ApiConfig.supabaseUrl,
+            supabaseKey = ApiConfig.supabaseAnonKey
+        ) {
+            install(Postgrest)
+        }
+    }
+    
+    single { GeminiService(get()) }
 }
 
 val repositoryModule = module {
-    singleOf(::LetterRepositoryImpl) bind LetterRepository::class
+    // LetterRepository sekarang membutuhkan database dan supabase
+    single<LetterRepository> { 
+        LetterRepositoryImpl(database = get(), supabase = get()) 
+    }
+    
     singleOf(::UserRepositoryImpl) bind UserRepository::class
     singleOf(::MusicRepositoryImpl) bind MusicRepository::class
 }
@@ -37,7 +58,7 @@ val repositoryModule = module {
 val viewModelModule = module {
     viewModelOf(::SplashScreenViewModel)
     viewModelOf(::HomeScreenViewModel)
-    viewModelOf(::SearchScreenViewModel) // Akan otomatis mengambil LetterRepository dari binding
+    viewModelOf(::SearchScreenViewModel)
     viewModelOf(::ComposeViewModel)
     viewModelOf(::DetailMessageScreenViewModel)
     viewModelOf(::HistoryScreenViewModel)
