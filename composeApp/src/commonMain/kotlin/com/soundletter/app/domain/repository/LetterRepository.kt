@@ -22,4 +22,9 @@ interface LetterRepository {
     suspend fun sendLetter(letter: Note)
 
     suspend fun deleteLetter(id: Long)
+
+    /**
+     * Menghapus semua riwayat pesan lokal
+     */
+    suspend fun clearHistory()
 }

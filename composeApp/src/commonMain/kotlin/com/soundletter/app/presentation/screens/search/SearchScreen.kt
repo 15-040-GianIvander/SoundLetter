@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.soundletter.app.core.util.UiState
 import com.soundletter.app.domain.model.Note
 import com.soundletter.app.presentation.screens.home.MessageCard
+import com.soundletter.app.presentation.screens.settings.SettingsViewModel
 import com.soundletter.app.presentation.theme.SoundLetterColors
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -27,23 +28,34 @@ import org.koin.compose.viewmodel.koinViewModel
 fun SearchScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    viewModel: SearchScreenViewModel = koinViewModel()
+    viewModel: SearchScreenViewModel = koinViewModel(),
+    settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val query by viewModel.query.collectAsState()
     val searchState by viewModel.searchState.collectAsState()
+    val isDarkMode by settingsViewModel.isDarkMode.collectAsState()
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Search Letter") },
+                title = { 
+                    Text(
+                        "Search Letter",
+                        color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.primary
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = if (isDarkMode) Color.White else MaterialTheme.colorScheme.primary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color.Transparent
                 )
             )
         }
@@ -51,7 +63,7 @@ fun SearchScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(SoundLetterColors.BackgroundGradient))
+                .background(Brush.verticalGradient(SoundLetterColors.getBackgroundGradient(isDarkMode)))
                 .padding(padding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -65,14 +77,19 @@ fun SearchScreen(
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
+                        .padding(horizontal = 24.dp),
+                    colors = SearchBarDefaults.colors(
+                        containerColor = if (isDarkMode) Color.White.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.8f)
+                    )
                 ) {}
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 when (val state = searchState) {
                     is UiState.Loading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
                     }
                     is UiState.Success -> {
                         LazyColumn(
@@ -83,18 +100,23 @@ fun SearchScreen(
                             items(state.data) { note ->
                                 MessageCard(
                                     message = note, 
+                                    isDarkMode = isDarkMode,
                                     onClick = { onNavigateToDetail(note.id.toString()) }
                                 )
                             }
                         }
                     }
                     is UiState.Error -> {
-                        Text(text = state.message, color = Color.Red, modifier = Modifier.padding(24.dp))
+                        Text(
+                            text = state.message, 
+                            color = MaterialTheme.colorScheme.error, 
+                            modifier = Modifier.padding(24.dp)
+                        )
                     }
                     is UiState.Idle -> {
                         Text(
                             text = "Start typing to search...",
-                            color = Color.Gray,
+                            color = if (isDarkMode) Color.White.copy(alpha = 0.6f) else Color.Gray,
                             modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 40.dp)
                         )
                     }

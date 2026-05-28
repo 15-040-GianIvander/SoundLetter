@@ -13,13 +13,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.soundletter.app.core.util.UiState
-import com.soundletter.app.presentation.components.GlassCard
-import com.soundletter.app.presentation.theme.SoundLetterColors
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,7 +55,7 @@ fun ComposeScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.primary
                 )
             )
@@ -67,7 +64,7 @@ fun ComposeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(SoundLetterColors.BackgroundGradient))
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
         ) {
             Column(
@@ -101,7 +98,10 @@ fun ComposeScreen(
                 Button(
                     onClick = { viewModel.recommendSongs() },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
                     enabled = !state.isAiLoading
                 ) {
                     Icon(Icons.Default.AutoAwesome, contentDescription = null)
@@ -110,7 +110,15 @@ fun ComposeScreen(
                 }
 
                 if (state.suggestions.isNotEmpty()) {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "AI Recommendations",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         items(state.suggestions) { song ->
                             SongSuggestionCard(
                                 song = song, 
@@ -126,13 +134,19 @@ fun ComposeScreen(
                 Button(
                     onClick = { viewModel.sendSoundLetter() },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
                     enabled = state.sendStatus !is UiState.Loading
                 ) {
                     if (state.sendStatus is UiState.Loading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.Black)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp), 
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     } else {
-                        Text("Send Letter", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text("Send Letter", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -142,17 +156,27 @@ fun ComposeScreen(
 
 @Composable
 fun SongSuggestionCard(song: SongSuggestion, isSelected: Boolean, onClick: () -> Unit) {
-    Card(
+    ElevatedCard(
         onClick = onClick,
         modifier = Modifier.width(160.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f) 
-                             else SoundLetterColors.GlassBackground
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer 
+                             else MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = song.title, fontWeight = FontWeight.Bold, maxLines = 1)
-            Text(text = song.artist, style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
+            Text(
+                text = song.title, 
+                fontWeight = FontWeight.Bold, 
+                maxLines = 1,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = song.artist, 
+                style = MaterialTheme.typography.labelSmall, 
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f) 
+                        else MaterialTheme.colorScheme.outline
+            )
         }
     }
 }

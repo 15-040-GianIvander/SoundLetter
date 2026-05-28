@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.soundletter.app.core.util.UiState
 import com.soundletter.app.domain.model.Note
 import com.soundletter.app.presentation.screens.home.MessageCard
+import com.soundletter.app.presentation.screens.settings.SettingsViewModel
 import com.soundletter.app.presentation.theme.SoundLetterColors
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -26,22 +27,33 @@ import org.koin.compose.viewmodel.koinViewModel
 fun HistoryScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    viewModel: HistoryScreenViewModel = koinViewModel()
+    viewModel: HistoryScreenViewModel = koinViewModel(),
+    settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.historyState.collectAsState()
+    val isDarkMode by settingsViewModel.isDarkMode.collectAsState()
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Sent History") },
+                title = { 
+                    Text(
+                        "Sent History",
+                        color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.primary
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = if (isDarkMode) Color.White else MaterialTheme.colorScheme.primary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color.Transparent
                 )
             )
         }
@@ -49,22 +61,21 @@ fun HistoryScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(SoundLetterColors.BackgroundGradient))
+                .background(Brush.verticalGradient(SoundLetterColors.getBackgroundGradient(isDarkMode)))
                 .padding(padding)
         ) {
             when (val state = uiState) {
                 is UiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
                 }
                 is UiState.Success -> {
                     val letters = state.data
                     if (letters.isEmpty()) {
                         Text(
                             text = "No history yet.",
-                            color = Color.White.copy(alpha = 0.6f),
+                            color = if (isDarkMode) Color.White.copy(alpha = 0.6f) else Color.Gray,
                             modifier = Modifier.align(Alignment.Center)
                         )
                     } else {
@@ -76,6 +87,7 @@ fun HistoryScreen(
                             items(letters) { note: Note ->
                                 MessageCard(
                                     message = note,
+                                    isDarkMode = isDarkMode,
                                     onClick = { onNavigateToDetail(note.id.toString()) }
                                 )
                             }

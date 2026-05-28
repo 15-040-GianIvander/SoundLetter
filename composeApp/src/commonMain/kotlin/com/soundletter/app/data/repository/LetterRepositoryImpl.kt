@@ -61,7 +61,7 @@ class LetterRepositoryImpl(
     }
 
     override suspend fun sendLetter(letter: Note) {
-        // 1. Coba sinkronisasi ke Cloud (Supabase)
+        // 1. Sinkronisasi ke Supabase
         try {
             val dto = SupabaseLetterDto(
                 recipient = letter.recipient,
@@ -71,12 +71,11 @@ class LetterRepositoryImpl(
                 song_artist = letter.songArtist
             )
             supabase.postgrest.from("letters").insert(dto)
-            println("Successfully synced to Supabase")
         } catch (e: Exception) {
-            println("Offline Mode: Gagal mengirim ke Supabase, menyimpan lokal saja. Error: ${e.message}")
+            println("Offline Mode: Sync failed. ${e.message}")
         }
 
-        // 2. Selalu simpan ke Lokal (SQLDelight) sebagai history
+        // 2. Simpan lokal
         queries.insertNote(
             recipient = letter.recipient,
             sender = letter.sender,
@@ -97,5 +96,10 @@ class LetterRepositoryImpl(
 
     override suspend fun deleteLetter(id: Long) {
         queries.deleteNoteById(id)
+    }
+
+    override suspend fun clearHistory() {
+        // Eksekusi query hapus semua data NoteEntity
+        queries.deleteAllNotes()
     }
 }

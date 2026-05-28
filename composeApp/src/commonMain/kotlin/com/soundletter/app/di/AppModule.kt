@@ -8,15 +8,18 @@ import com.soundletter.app.data.local.SoundLetterDatabase
 import com.soundletter.app.data.repository.LetterRepositoryImpl
 import com.soundletter.app.data.repository.MusicRepositoryImpl
 import com.soundletter.app.data.repository.UserRepositoryImpl
+import com.soundletter.app.data.repository.PreferenceRepositoryImpl
 import com.soundletter.app.domain.repository.LetterRepository
 import com.soundletter.app.domain.repository.MusicRepository
 import com.soundletter.app.domain.repository.UserRepository
+import com.soundletter.app.domain.repository.PreferenceRepository
 import com.soundletter.app.presentation.screens.compose.ComposeViewModel
 import com.soundletter.app.presentation.screens.detail.DetailMessageScreenViewModel
 import com.soundletter.app.presentation.screens.history.HistoryScreenViewModel
 import com.soundletter.app.presentation.screens.home.HomeScreenViewModel
 import com.soundletter.app.presentation.screens.search.SearchScreenViewModel
 import com.soundletter.app.presentation.screens.splash.SplashScreenViewModel
+import com.soundletter.app.presentation.screens.settings.SettingsViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -46,13 +49,13 @@ val dataModule = module {
 }
 
 val repositoryModule = module {
-    // LetterRepository sekarang membutuhkan database dan supabase
     single<LetterRepository> { 
         LetterRepositoryImpl(database = get(), supabase = get()) 
     }
     
     singleOf(::UserRepositoryImpl) bind UserRepository::class
     singleOf(::MusicRepositoryImpl) bind MusicRepository::class
+    single<PreferenceRepository> { PreferenceRepositoryImpl() }
 }
 
 val viewModelModule = module {
@@ -62,6 +65,7 @@ val viewModelModule = module {
     viewModelOf(::ComposeViewModel)
     viewModelOf(::DetailMessageScreenViewModel)
     viewModelOf(::HistoryScreenViewModel)
+    viewModelOf(::SettingsViewModel)
 }
 
 val appModule = listOf(dataModule, repositoryModule, viewModelModule)
