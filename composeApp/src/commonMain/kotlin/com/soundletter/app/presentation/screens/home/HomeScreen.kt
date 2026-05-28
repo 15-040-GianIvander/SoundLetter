@@ -7,11 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -19,9 +18,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.soundletter.app.core.util.UiState
 import com.soundletter.app.domain.model.Note
+import com.soundletter.app.presentation.components.EmptyStateView
 import com.soundletter.app.presentation.components.GlassCard
+import com.soundletter.app.presentation.components.LoadingView
 import com.soundletter.app.presentation.screens.settings.SettingsViewModel
 import com.soundletter.app.presentation.theme.SoundLetterColors
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,14 +35,30 @@ fun HomeScreen(
     onNavigateToSearch: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    navController: NavController,
     viewModel: HomeScreenViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDarkMode by settingsViewModel.isDarkMode.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Observe success signal from ComposeScreen
+    val composeSuccess by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow("compose_success", false)
+        ?.collectAsState() ?: mutableStateOf(false)
+
+    LaunchedEffect(composeSuccess) {
+        if (composeSuccess) {
+            snackbarHostState.showSnackbar("Surat musik berhasil dilarungkan!")
+            navController.currentBackStackEntry?.savedStateHandle?.set("compose_success", false)
+        }
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToCompose,
@@ -77,31 +95,37 @@ fun HomeScreen(
 
                 when (val state = uiState) {
                     is UiState.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                        }
+                        LoadingView()
                     }
                     is UiState.Success -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(24.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(state.data) { letter ->
-                                MessageCard(
-                                    message = letter, 
-                                    isDarkMode = isDarkMode,
-                                    onClick = { onNavigateToDetail(letter.id.toString()) }
-                                )
+                        if (state.data.isEmpty()) {
+                            EmptyStateView(
+                                icon = Icons.Default.Inbox,
+                                title = "Belum Ada Surat",
+                                description = "Jadilah yang pertama mengirimkan melodi perasaan!"
+                            )
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(24.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(state.data, key = { it.id }) { letter ->
+                                    Box(modifier = Modifier.animateItem()) {
+                                        MessageCard(
+                                            message = letter,
+                                            isDarkMode = isDarkMode,
+                                            onClick = { onNavigateToDetail(letter.id.toString()) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                     is UiState.Error -> {
-                        Text(
-                            text = state.message,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(24.dp)
-                        )
+                        LaunchedEffect(state.message) {
+                            snackbarHostState.showSnackbar("Koneksi terputus: ${state.message}")
+                        }
                     }
                     else -> {}
                 }

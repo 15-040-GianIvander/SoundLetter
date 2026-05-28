@@ -7,10 +7,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -18,6 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.soundletter.app.core.util.UiState
 import com.soundletter.app.domain.model.Note
+import com.soundletter.app.presentation.components.EmptyStateView
+import com.soundletter.app.presentation.components.LoadingView
 import com.soundletter.app.presentation.screens.home.MessageCard
 import com.soundletter.app.presentation.screens.settings.SettingsViewModel
 import com.soundletter.app.presentation.theme.SoundLetterColors
@@ -34,9 +35,11 @@ fun SearchScreen(
     val query by viewModel.query.collectAsState()
     val searchState by viewModel.searchState.collectAsState()
     val isDarkMode by settingsViewModel.isDarkMode.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 
@@ -87,37 +90,43 @@ fun SearchScreen(
 
                 when (val state = searchState) {
                     is UiState.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                        }
+                        LoadingView()
                     }
                     is UiState.Success -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(24.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(state.data) { note ->
-                                MessageCard(
-                                    message = note, 
-                                    isDarkMode = isDarkMode,
-                                    onClick = { onNavigateToDetail(note.id.toString()) }
-                                )
+                        if (state.data.isEmpty()) {
+                            EmptyStateView(
+                                icon = Icons.Default.SearchOff,
+                                title = "Tidak Ditemukan",
+                                description = "Kami tidak menemukan surat untuk nama tersebut."
+                            )
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(24.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(state.data, key = { it.id }) { note ->
+                                    Box(modifier = Modifier.animateItem()) {
+                                        MessageCard(
+                                            message = note, 
+                                            isDarkMode = isDarkMode,
+                                            onClick = { onNavigateToDetail(note.id.toString()) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                     is UiState.Error -> {
-                        Text(
-                            text = state.message, 
-                            color = MaterialTheme.colorScheme.error, 
-                            modifier = Modifier.padding(24.dp)
-                        )
+                        LaunchedEffect(state.message) {
+                            snackbarHostState.showSnackbar("Pencarian gagal: ${state.message}")
+                        }
                     }
                     is UiState.Idle -> {
-                        Text(
-                            text = "Start typing to search...",
-                            color = if (isDarkMode) Color.White.copy(alpha = 0.6f) else Color.Gray,
-                            modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 40.dp)
+                        EmptyStateView(
+                            icon = Icons.Default.Search,
+                            title = "Mulai Mencari",
+                            description = "Ketik nama penerima untuk menemukan surat tersembunyi."
                         )
                     }
                 }

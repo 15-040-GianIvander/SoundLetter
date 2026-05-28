@@ -1,5 +1,7 @@
 package com.soundletter.app.presentation.navigation
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -12,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -53,8 +56,10 @@ fun AppNavHost(
         containerColor = Color.Transparent,
         bottomBar = {
             if (showBottomBar) {
+                // Poin 1: Warna menu bawah lebih gelap (solid) di dark mode
                 NavigationBar(
-                    containerColor = if (isDarkMode) Color.Black.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.5f)
+                    containerColor = if (isDarkMode) Color(0xFF121212) else Color.White,
+                    tonalElevation = 8.dp
                 ) {
                     mainScreens.forEach { screen ->
                         val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
@@ -104,7 +109,19 @@ fun AppNavHost(
         NavHost(
             navController = navController,
             startDestination = Screen.Splash.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = {
+                slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+            },
+            exitTransition = {
+                slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+            },
+            popEnterTransition = {
+                slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+            },
+            popExitTransition = {
+                slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+            }
         ) {
             composable(Screen.Splash.route) {
                 SplashContent(
@@ -122,7 +139,8 @@ fun AppNavHost(
                     onNavigateToDetail = { id -> navController.navigate(Screen.DetailMessage.createRoute(id)) },
                     onNavigateToSearch = { navController.navigate(Screen.Search.route) },
                     onNavigateToHistory = { navController.navigate(Screen.History.route) },
-                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                    navController = navController
                 )
             }
 
@@ -135,7 +153,12 @@ fun AppNavHost(
 
             composable(Screen.Compose.route) {
                 ComposeScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onSuccess = {
+                        // Poin 3: Set flag sukses di savedStateHandle dan kembali ke Home
+                        navController.previousBackStackEntry?.savedStateHandle?.set("compose_success", true)
+                        navController.popBackStack()
+                    }
                 )
             }
 

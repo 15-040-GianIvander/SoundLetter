@@ -6,10 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -17,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.soundletter.app.core.util.UiState
 import com.soundletter.app.domain.model.Note
+import com.soundletter.app.presentation.components.EmptyStateView
+import com.soundletter.app.presentation.components.LoadingView
 import com.soundletter.app.presentation.screens.home.MessageCard
 import com.soundletter.app.presentation.screens.settings.SettingsViewModel
 import com.soundletter.app.presentation.theme.SoundLetterColors
@@ -32,9 +33,11 @@ fun HistoryScreen(
 ) {
     val uiState by viewModel.historyState.collectAsState()
     val isDarkMode by settingsViewModel.isDarkMode.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 
@@ -66,17 +69,15 @@ fun HistoryScreen(
         ) {
             when (val state = uiState) {
                 is UiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                    }
+                    LoadingView()
                 }
                 is UiState.Success -> {
                     val letters = state.data
                     if (letters.isEmpty()) {
-                        Text(
-                            text = "No history yet.",
-                            color = if (isDarkMode) Color.White.copy(alpha = 0.6f) else Color.Gray,
-                            modifier = Modifier.align(Alignment.Center)
+                        EmptyStateView(
+                            icon = Icons.Default.Inbox,
+                            title = "Riwayat Kosong",
+                            description = "Anda belum mengirimkan surat musik apa pun."
                         )
                     } else {
                         LazyColumn(
@@ -84,22 +85,22 @@ fun HistoryScreen(
                             contentPadding = PaddingValues(24.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items(letters) { note: Note ->
-                                MessageCard(
-                                    message = note,
-                                    isDarkMode = isDarkMode,
-                                    onClick = { onNavigateToDetail(note.id.toString()) }
-                                )
+                            items(letters, key = { it.id }) { note: Note ->
+                                Box(modifier = Modifier.animateItem()) {
+                                    MessageCard(
+                                        message = note,
+                                        isDarkMode = isDarkMode,
+                                        onClick = { onNavigateToDetail(note.id.toString()) }
+                                    )
+                                }
                             }
                         }
                     }
                 }
                 is UiState.Error -> {
-                    Text(
-                        text = "Error: ${state.message}",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    LaunchedEffect(state.message) {
+                        snackbarHostState.showSnackbar("Gagal memuat riwayat: ${state.message}")
+                    }
                 }
                 else -> {}
             }

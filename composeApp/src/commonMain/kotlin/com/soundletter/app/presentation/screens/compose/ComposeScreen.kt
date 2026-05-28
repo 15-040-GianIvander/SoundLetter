@@ -13,155 +13,185 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.soundletter.app.core.util.UiState
+import com.soundletter.app.presentation.components.LoadingView
+import com.soundletter.app.presentation.screens.settings.SettingsViewModel
+import com.soundletter.app.presentation.theme.SoundLetterColors
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ComposeScreen(
     onNavigateBack: () -> Unit,
-    viewModel: ComposeViewModel = koinViewModel()
+    onSuccess: () -> Unit = {},
+    viewModel: ComposeViewModel = koinViewModel(),
+    settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val isDarkMode by settingsViewModel.isDarkMode.collectAsState()
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val contentColor = if (isDarkMode) Color.White else MaterialTheme.colorScheme.primary
+    
+    // Poin 2: Warna font hitam di dark mode. 
+    // Container dibuat lebih terang agar teks hitam terbaca jelas.
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = contentColor,
+        unfocusedBorderColor = contentColor.copy(alpha = 0.5f),
+        focusedLabelColor = if (isDarkMode) Color.Black.copy(alpha = 0.7f) else contentColor,
+        unfocusedLabelColor = if (isDarkMode) Color.Black.copy(alpha = 0.5f) else contentColor.copy(alpha = 0.7f),
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedContainerColor = if (isDarkMode) Color.White.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.2f),
+        unfocusedContainerColor = if (isDarkMode) Color.White.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.2f)
+    )
 
     LaunchedEffect(state.sendStatus) {
         when (val status = state.sendStatus) {
             is UiState.Success -> {
-                snackbarHostState.showSnackbar("Letter sent successfully!")
+                // Poin 3: Kembali ke Home langsung, notifikasi ditangani di Home
                 viewModel.resetStatus()
-                onNavigateBack()
+                onSuccess()
             }
             is UiState.Error -> {
-                snackbarHostState.showSnackbar("Error: ${status.message}")
+                snackbarHostState.showSnackbar("Gagal mengirim: ${status.message}")
                 viewModel.resetStatus()
             }
             else -> {}
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Compose Letter") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.primary
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            topBar = {
+                TopAppBar(
+                    title = { Text("Compose Letter", color = contentColor) },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = contentColor)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
-            )
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding)
-        ) {
-            Column(
+            }
+        ) { padding ->
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .background(Brush.verticalGradient(SoundLetterColors.getBackgroundGradient(isDarkMode)))
+                    .padding(padding)
             ) {
-                OutlinedTextField(
-                    value = state.recipient,
-                    onValueChange = { viewModel.onRecipientChange(it) },
-                    label = { Text("To") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = state.sender,
-                    onValueChange = { viewModel.onSenderChange(it) },
-                    label = { Text("From (Optional)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = state.message,
-                    onValueChange = { viewModel.onMessageChange(it) },
-                    label = { Text("Message") },
-                    modifier = Modifier.fillMaxWidth().height(150.dp)
-                )
-
-                Button(
-                    onClick = { viewModel.recommendSongs() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    ),
-                    enabled = !state.isAiLoading
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (state.isAiLoading) "Analyzing..." else "Rekomendasikan Lagu dengan AI")
-                }
-
-                if (state.suggestions.isNotEmpty()) {
-                    Text(
-                        text = "AI Recommendations",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
+                    OutlinedTextField(
+                        value = state.recipient,
+                        onValueChange = { viewModel.onRecipientChange(it) },
+                        label = { Text("Untuk") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = textFieldColors
                     )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+
+                    OutlinedTextField(
+                        value = state.sender,
+                        onValueChange = { viewModel.onSenderChange(it) },
+                        label = { Text("Dari (Opsional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = textFieldColors
+                    )
+
+                    OutlinedTextField(
+                        value = state.message,
+                        onValueChange = { viewModel.onMessageChange(it) },
+                        label = { Text("Pesan") },
+                        modifier = Modifier.fillMaxWidth().height(150.dp),
+                        colors = textFieldColors
+                    )
+
+                    Button(
+                        onClick = { viewModel.recommendSongs() },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isDarkMode) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f) 
+                                             else MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        enabled = !state.isAiLoading
                     ) {
-                        items(state.suggestions) { song ->
-                            SongSuggestionCard(
-                                song = song, 
-                                isSelected = state.selectedSong == song,
-                                onClick = { viewModel.onSongSelect(song) }
-                            )
+                        if (state.isAiLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Default.AutoAwesome, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Rekomendasikan Lagu dengan AI")
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                    if (state.suggestions.isNotEmpty()) {
+                        Text("AI Recommendations", style = MaterialTheme.typography.labelMedium, color = contentColor)
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(state.suggestions) { song ->
+                                SongSuggestionCard(
+                                    song = song, 
+                                    isSelected = state.selectedSong == song,
+                                    isDarkMode = isDarkMode,
+                                    onClick = { viewModel.onSongSelect(song) }
+                                )
+                            }
+                        }
+                    }
 
-                Button(
-                    onClick = { viewModel.sendSoundLetter() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    enabled = state.sendStatus !is UiState.Loading
-                ) {
-                    if (state.sendStatus is UiState.Loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp), 
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Text("Send Letter", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Button(
+                        onClick = { 
+                            if (state.recipient.isBlank() || state.message.isBlank()) {
+                                scope.launch { snackbarHostState.showSnackbar("Nama dan pesan tidak boleh kosong!") }
+                            } else {
+                                viewModel.sendSoundLetter()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        enabled = state.sendStatus !is UiState.Loading
+                    ) {
+                        Text("Kirim Surat", fontWeight = FontWeight.Bold)
                     }
                 }
             }
+        }
+        
+        // Overlay Loading untuk UX yang lebih mantap
+        if (state.sendStatus is UiState.Loading) {
+            LoadingView()
         }
     }
 }
 
 @Composable
-fun SongSuggestionCard(song: SongSuggestion, isSelected: Boolean, onClick: () -> Unit) {
+fun SongSuggestionCard(song: SongSuggestion, isSelected: Boolean, isDarkMode: Boolean, onClick: () -> Unit) {
     ElevatedCard(
         onClick = onClick,
         modifier = Modifier.width(160.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer 
-                             else MaterialTheme.colorScheme.surfaceVariant
+                             else if (isDarkMode) Color.White.copy(alpha = 0.1f)
+                             else Color.White.copy(alpha = 0.8f)
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -169,13 +199,15 @@ fun SongSuggestionCard(song: SongSuggestion, isSelected: Boolean, onClick: () ->
                 text = song.title, 
                 fontWeight = FontWeight.Bold, 
                 maxLines = 1,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer 
+                        else if (isDarkMode) Color.White else Color.Black
             )
             Text(
                 text = song.artist, 
                 style = MaterialTheme.typography.labelSmall, 
                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f) 
-                        else MaterialTheme.colorScheme.outline
+                        else if (isDarkMode) Color.White.copy(alpha = 0.6f) 
+                        else Color.DarkGray
             )
         }
     }
