@@ -7,37 +7,34 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// Sky Blue Branding
-private val SkyBluePrimary = Color(0xFF00A9E0)
-private val SkyBlueSecondary = Color(0xFF007A99)
-private val SkyBlueTertiary = Color(0xFF005F73)
-
 private val LightColorScheme = lightColorScheme(
-    primary = SkyBluePrimary,
+    primary = SoundLetterColors.SkyBlue,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFC1E8FF),
-    onPrimaryContainer = Color(0xFF001E2C),
-    secondary = SkyBlueSecondary,
+    secondary = SoundLetterColors.SkyBlueDark,
     onSecondary = Color.White,
-    background = Color.White,
-    surface = Color.White,
-    onBackground = Color(0xFF191C1E),
-    onSurface = Color(0xFF191C1E),
+    background = SoundLetterColors.PureWhite,
+    surface = SoundLetterColors.PureWhite,
+    onBackground = SoundLetterColors.TextPrimaryLight,
+    onSurface = SoundLetterColors.TextPrimaryLight,
+    surfaceVariant = Color(0xFFF5F5F5),
+    onSurfaceVariant = SoundLetterColors.TextSecondaryLight,
+    outline = SoundLetterColors.SkyBlue,
     error = Color(0xFFBA1A1A),
     onError = Color.White
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF76D1FF),
-    onPrimary = Color(0xFF003549),
-    primaryContainer = Color(0xFF004C69),
-    onPrimaryContainer = Color(0xFFC1E8FF),
-    secondary = Color(0xFFB0CCDE),
-    onSecondary = Color(0xFF193444),
-    background = Color(0xFF191C1E),
-    surface = Color(0xFF191C1E),
-    onBackground = Color(0xFFE1E2E5),
-    onSurface = Color(0xFFE1E2E5),
+    primary = SoundLetterColors.SkyBlue,
+    onPrimary = Color.Black,
+    secondary = SoundLetterColors.SkyBlueDark,
+    onSecondary = Color.Black,
+    background = SoundLetterColors.PureBlack,
+    surface = SoundLetterColors.DarkSurface,
+    onBackground = SoundLetterColors.TextPrimaryDark,
+    onSurface = SoundLetterColors.TextPrimaryDark,
+    surfaceVariant = Color(0xFF1E1E1E),
+    onSurfaceVariant = SoundLetterColors.TextSecondaryDark,
+    outline = SoundLetterColors.SkyBlue,
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005)
 )

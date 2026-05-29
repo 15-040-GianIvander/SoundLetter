@@ -158,13 +158,13 @@ fun SettingsScreen(
                     GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column {
                             Text(
-                                text = "Dibuat oleh: Gian, Atalie, & Dzaky",
+                                text = "Dibuat oleh: Gian Ivander, Muhammad Dzaky & Atalie Salsabila",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = if (isDarkMode) Color.White else Color.Black
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Kampus: Institut Teknologi Sumatera (ITERA)",
+                                text = "Teknik Informatika, Institut Teknologi Sumatera",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (isDarkMode) Color.White.copy(alpha = 0.7f) else Color.DarkGray
                             )

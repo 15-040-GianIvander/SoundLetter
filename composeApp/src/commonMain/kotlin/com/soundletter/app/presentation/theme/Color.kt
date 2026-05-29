@@ -3,24 +3,27 @@ package com.soundletter.app.presentation.theme
 import androidx.compose.ui.graphics.Color
 
 object SoundLetterColors {
-    val GlassBackground = Color(0x33FFFFFF)
-    val GlassBorder = Color(0x66FFFFFF)
+    // Brand Accent Color (Sky Blue) - HANYA untuk aksen
+    val SkyBlue = Color(0xFF00BFFF)
+    val SkyBlueDark = Color(0xFF0099CC)
     
-    // Dark mode gradient
-    val DarkBackgroundGradient = listOf(
-        Color(0xFF001E2C),
-        Color(0xFF005F73),
-        Color(0xFF00A9E0)
-    )
+    // Core Backgrounds (Aturan Ketat: Putih Murni & Hitam Pekat)
+    val PureWhite = Color(0xFFFFFFFF)
+    val PureBlack = Color(0xFF000000)
+    val DarkSurface = Color(0xFF121212)
     
-    // Light mode gradient - softer blue gradient, not plain white
-    val LightBackgroundGradient = listOf(
-        Color(0xFFE3F2FD),
-        Color(0xFFBBDEFB),
-        Color(0xFF90CAF9)
-    )
+    // Text Colors
+    val TextPrimaryLight = Color(0xFF000000)
+    val TextSecondaryLight = Color(0xFF424242)
+    val TextPrimaryDark = Color(0xFFFFFFFF)
+    val TextSecondaryDark = Color(0xFFBDBDBD)
+    
+    // UI Elements (GlassCard) - Dibuat sangat tipis agar background tetap dominan
+    val GlassBackground = Color(0x0D00BFFF) 
+    val GlassBorder = Color(0x1A00BFFF)
 
+    // Helper untuk kompatibilitas layar lama (Sekarang mengembalikan warna solid)
     fun getBackgroundGradient(isDarkMode: Boolean): List<Color> {
-        return if (isDarkMode) DarkBackgroundGradient else LightBackgroundGradient
+        return if (isDarkMode) listOf(PureBlack, PureBlack) else listOf(PureWhite, PureWhite)
     }
 }

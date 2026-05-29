@@ -85,14 +85,6 @@ fun HomeScreen(
                     )
                 )
 
-                Text(
-                    text = "Global Feed",
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = if (isDarkMode) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.outline
-                    )
-                )
-
                 when (val state = uiState) {
                     is UiState.Loading -> {
                         LoadingView()
