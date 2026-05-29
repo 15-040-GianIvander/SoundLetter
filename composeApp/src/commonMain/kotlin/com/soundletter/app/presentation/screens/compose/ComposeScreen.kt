@@ -21,6 +21,7 @@ import com.soundletter.app.core.util.UiState
 import com.soundletter.app.presentation.components.LoadingView
 import com.soundletter.app.presentation.screens.settings.SettingsViewModel
 import com.soundletter.app.presentation.theme.SoundLetterColors
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -28,7 +29,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ComposeScreen(
     onNavigateBack: () -> Unit,
-    onSuccess: () -> Unit = {},
+    onSuccess: (Boolean) -> Unit = {},
     viewModel: ComposeViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
@@ -40,8 +41,6 @@ fun ComposeScreen(
 
     val contentColor = if (isDarkMode) Color.White else MaterialTheme.colorScheme.primary
     
-    // Poin 2: Warna font hitam di dark mode. 
-    // Container dibuat lebih terang agar teks hitam terbaca jelas.
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = contentColor,
         unfocusedBorderColor = contentColor.copy(alpha = 0.5f),
@@ -53,12 +52,26 @@ fun ComposeScreen(
         unfocusedContainerColor = if (isDarkMode) Color.White.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.2f)
     )
 
+    // Handle UI Events (Snackbar)
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is ComposeUiEvent.ShowOfflineSnackbar -> {
+                    snackbarHostState.showSnackbar(
+                        message = "Koneksi terputus. Pesan disimpan di riwayat lokal.",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+        }
+    }
+
     LaunchedEffect(state.sendStatus) {
         when (val status = state.sendStatus) {
             is UiState.Success -> {
-                // Poin 3: Kembali ke Home langsung, notifikasi ditangani di Home
+                val isSynced = status.data
                 viewModel.resetStatus()
-                onSuccess()
+                onSuccess(isSynced)
             }
             is UiState.Error -> {
                 snackbarHostState.showSnackbar("Gagal mengirim: ${status.message}")
@@ -68,7 +81,7 @@ fun ComposeScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Scaffold(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -87,7 +100,6 @@ fun ComposeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Brush.verticalGradient(SoundLetterColors.getBackgroundGradient(isDarkMode)))
                     .padding(padding)
             ) {
                 Column(
@@ -176,7 +188,6 @@ fun ComposeScreen(
             }
         }
         
-        // Overlay Loading untuk UX yang lebih mantap
         if (state.sendStatus is UiState.Loading) {
             LoadingView()
         }

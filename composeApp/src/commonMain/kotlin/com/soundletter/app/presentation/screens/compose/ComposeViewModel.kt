@@ -19,7 +19,7 @@ data class ComposeState(
     val selectedSong: SongSuggestion? = null,
     val suggestions: List<SongSuggestion> = emptyList(),
     val isAiLoading: Boolean = false,
-    val sendStatus: UiState<Unit> = UiState.Idle
+    val sendStatus: UiState<Boolean> = UiState.Idle
 )
 
 sealed class ComposeUiEvent {
@@ -67,7 +67,7 @@ class ComposeViewModel(
                     _uiEvent.emit(ComposeUiEvent.ShowOfflineSnackbar)
                 }
 
-                _state.update { it.copy(sendStatus = UiState.Success(Unit)) }
+                _state.update { it.copy(sendStatus = UiState.Success(isSynced)) }
             } catch (e: Exception) {
                 _state.update { it.copy(sendStatus = UiState.Error(e.message ?: "An unexpected error occurred")) }
             }

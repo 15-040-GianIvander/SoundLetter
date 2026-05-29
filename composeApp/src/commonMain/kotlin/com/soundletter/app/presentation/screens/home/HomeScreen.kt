@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,21 +42,32 @@ fun HomeScreen(
     val isDarkMode by settingsViewModel.isDarkMode.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Observe success signal from ComposeScreen
+    // Mengambil status dari ComposeScreen via savedStateHandle
     val composeSuccess by navController.currentBackStackEntry
         ?.savedStateHandle
         ?.getStateFlow("compose_success", false)
         ?.collectAsState() ?: mutableStateOf(false)
 
+    val isSynced by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow("compose_is_synced", true)
+        ?.collectAsState() ?: mutableStateOf(true)
+
     LaunchedEffect(composeSuccess) {
         if (composeSuccess) {
-            snackbarHostState.showSnackbar("Surat musik berhasil dilarungkan!")
+            val message = if (isSynced) {
+                "Surat musik berhasil dilarungkan!"
+            } else {
+                "Koneksi terputus. Pesan disimpan di riwayat lokal."
+            }
+            snackbarHostState.showSnackbar(message)
+            // Reset agar tidak muncul berulang
             navController.currentBackStackEntry?.savedStateHandle?.set("compose_success", false)
         }
     }
 
     Scaffold(
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
@@ -71,7 +81,7 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(SoundLetterColors.getBackgroundGradient(isDarkMode)))
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -116,7 +126,7 @@ fun HomeScreen(
                     }
                     is UiState.Error -> {
                         LaunchedEffect(state.message) {
-                            snackbarHostState.showSnackbar("Koneksi terputus: ${state.message}")
+                            snackbarHostState.showSnackbar("Gagal memuat data: ${state.message}")
                         }
                     }
                     else -> {}
@@ -131,7 +141,8 @@ fun MessageCard(message: Note, isDarkMode: Boolean, onClick: () -> Unit) {
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable { onClick() },
+        isDarkMode = isDarkMode
     ) {
         Column(modifier = Modifier.padding(4.dp)) {
             Row(

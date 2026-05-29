@@ -56,7 +56,6 @@ fun AppNavHost(
         containerColor = Color.Transparent,
         bottomBar = {
             if (showBottomBar) {
-                // Poin 1: Warna menu bawah lebih gelap (solid) di dark mode
                 NavigationBar(
                     containerColor = if (isDarkMode) Color(0xFF121212) else Color.White,
                     tonalElevation = 8.dp
@@ -154,9 +153,9 @@ fun AppNavHost(
             composable(Screen.Compose.route) {
                 ComposeScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onSuccess = {
-                        // Poin 3: Set flag sukses di savedStateHandle dan kembali ke Home
+                    onSuccess = { isSynced: Boolean ->
                         navController.previousBackStackEntry?.savedStateHandle?.set("compose_success", true)
+                        navController.previousBackStackEntry?.savedStateHandle?.set("compose_is_synced", isSynced)
                         navController.popBackStack()
                     }
                 )
