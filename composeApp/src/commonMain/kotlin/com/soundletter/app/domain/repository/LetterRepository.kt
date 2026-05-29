@@ -17,9 +17,10 @@ interface LetterRepository {
     suspend fun getLetterById(id: Long): Note?
     
     /**
-     * Mengirim pesan ke Supabase (jika online) dan menyimpannya di lokal
+     * Mengirim pesan ke Supabase (jika online) dan menyimpannya di lokal.
+     * @return true jika berhasil sinkron ke cloud, false jika hanya tersimpan di lokal (offline).
      */
-    suspend fun sendLetter(letter: Note)
+    suspend fun sendLetter(letter: Note): Boolean
 
     suspend fun deleteLetter(id: Long)
 

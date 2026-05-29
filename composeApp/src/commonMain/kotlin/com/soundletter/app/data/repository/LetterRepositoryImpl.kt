@@ -60,7 +60,8 @@ class LetterRepositoryImpl(
             .map { entities -> entities.map { it.toDomain() } }
     }
 
-    override suspend fun sendLetter(letter: Note) {
+    override suspend fun sendLetter(letter: Note): Boolean {
+        var isSynced = false
         // 1. Sinkronisasi ke Supabase
         try {
             val dto = SupabaseLetterDto(
@@ -71,8 +72,10 @@ class LetterRepositoryImpl(
                 song_artist = letter.songArtist
             )
             supabase.postgrest.from("letters").insert(dto)
+            isSynced = true
         } catch (e: Exception) {
             println("Offline Mode: Sync failed. ${e.message}")
+            isSynced = false
         }
 
         // 2. Simpan lokal
@@ -88,6 +91,7 @@ class LetterRepositoryImpl(
             created_at = letter.createdAt.toEpochMilliseconds(),
             updated_at = letter.updatedAt.toEpochMilliseconds()
         )
+        return isSynced
     }
 
     override suspend fun getLetterById(id: Long): Note? {
@@ -99,7 +103,6 @@ class LetterRepositoryImpl(
     }
 
     override suspend fun clearHistory() {
-        // Eksekusi query hapus semua data NoteEntity
         queries.deleteAllNotes()
     }
 }

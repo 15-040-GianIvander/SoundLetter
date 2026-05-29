@@ -6,10 +6,7 @@ import com.soundletter.app.core.util.UiState
 import com.soundletter.app.domain.model.Note
 import com.soundletter.app.domain.repository.LetterRepository
 import com.soundletter.app.domain.repository.MusicRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
@@ -25,6 +22,10 @@ data class ComposeState(
     val sendStatus: UiState<Unit> = UiState.Idle
 )
 
+sealed class ComposeUiEvent {
+    object ShowOfflineSnackbar : ComposeUiEvent()
+}
+
 class ComposeViewModel(
     private val letterRepository: LetterRepository,
     private val musicRepository: MusicRepository
@@ -32,18 +33,16 @@ class ComposeViewModel(
     private val _state = MutableStateFlow(ComposeState())
     val state: StateFlow<ComposeState> = _state.asStateFlow()
 
+    private val _uiEvent = MutableSharedFlow<ComposeUiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
     fun onRecipientChange(value: String) = _state.update { it.copy(recipient = value) }
     fun onSenderChange(value: String) = _state.update { it.copy(sender = value) }
     fun onMessageChange(value: String) = _state.update { it.copy(message = value) }
     fun onSongSelect(song: SongSuggestion) = _state.update { it.copy(selectedSong = song) }
 
-    /**
-     * Mengirim SoundLetter: Simpan ke Firestore (Public) & SQLDelight (Local History)
-     */
     fun sendSoundLetter() {
         val currentState = _state.value
-        
-        // 1. Validasi Input
         if (currentState.recipient.isBlank() || currentState.message.isBlank()) {
             _state.update { it.copy(sendStatus = UiState.Error("Recipient and message cannot be empty")) }
             return
@@ -62,8 +61,11 @@ class ComposeViewModel(
                     updatedAt = Clock.System.now()
                 )
 
-                // 2. Dual-Save via Repository (Lokal + simulated Remote)
-                letterRepository.sendLetter(newLetter)
+                val isSynced = letterRepository.sendLetter(newLetter)
+                
+                if (!isSynced) {
+                    _uiEvent.emit(ComposeUiEvent.ShowOfflineSnackbar)
+                }
 
                 _state.update { it.copy(sendStatus = UiState.Success(Unit)) }
             } catch (e: Exception) {
