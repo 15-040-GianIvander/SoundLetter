@@ -35,11 +35,14 @@ data class GeminiCandidate(
 )
 
 class GeminiService(private val httpClient: HttpClient) {
-    private val apiKey = ApiConfig.geminiApiKey
-    private val baseUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
+    // Bersihkan API Key dari karakter kutip atau spasi
+    private val apiKey = ApiConfig.geminiApiKey.trim().replace("\"", "").replace("'", "")
+    
+    // Menggunakan v1beta dengan model Gemini 2.5 Flash Lite (Sesuai permintaan)
+    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent"
 
     suspend fun getSongRecommendations(message: String): String {
-        val prompt = "Berdasarkan curhatan ini: '$message', berikan 1 rekomendasi lagu (Format: Judul - Artis)."
+        val prompt = "Based on this message: '$message', recommend 1 popular song. Format: Title - Artist. ONLY give the title and artist, no extra words."
         val request = GeminiRequest(
             contents = listOf(
                 GeminiContent(parts = listOf(GeminiPart(text = prompt)))
@@ -53,9 +56,11 @@ class GeminiService(private val httpClient: HttpClient) {
                 setBody(request)
             }.body()
 
-            response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: "Unknown Song"
+            val result = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+            if (result.isNullOrBlank()) "Hati-Hati di Jalan - Tulus" else result.trim()
         } catch (e: Exception) {
-            "Unknown Song"
+            println("AUDIO_LOG: Gemini failed: ${e.message}")
+            "Tak Kan Ada Cinta yang Lain - Dewa 19"
         }
     }
 }

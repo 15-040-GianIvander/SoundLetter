@@ -21,9 +21,8 @@ class LetterRepositoryImpl(
     
     private val queries = database.noteQueries
 
-    // 1. GENERATOR 50 DATA DUMMY GLOBAL (Seolah-olah dari user lain)
     private val dummyGlobalLetters: List<Note> = List(50) { index ->
-        val variation = index % 10 // Kita buat 10 variasi konten agar lebih beragam
+        val variation = index % 10 
         Note(
             id = -(index + 100).toLong(),
             recipient = when (variation) {
@@ -86,7 +85,12 @@ class LetterRepositoryImpl(
                 8 -> "Kunto Aji"
                 else -> "Tulus"
             },
-            // Menggunakan Picsum untuk simulasi Album Art agar UI terlihat nyata dan estetik
+            songPreviewUrl = when (variation) {
+                0 -> "https://p.scdn.co/mp3-preview/3eb16018c747030ae45a597ad20120556c3ad5c9"
+                1 -> "https://p.scdn.co/mp3-preview/0d9c490a0f829d66f6e80b435d72f12c140c885e"
+                2 -> "https://p.scdn.co/mp3-preview/6121f061e8605333f278d65c69781a798369b76c"
+                else -> null
+            },
             songAlbumArtUrl = "https://picsum.photos/seed/${index + 50}/300/300",
             category = NoteCategory.entries[index % NoteCategory.entries.size],
             color = NoteColor.entries[index % NoteColor.entries.size],
@@ -95,12 +99,8 @@ class LetterRepositoryImpl(
         )
     }
 
-    // 2. Return data dummy sebagai Global Feed
-    override fun getGlobalLetters(): Flow<List<Note>> {
-        return flowOf(dummyGlobalLetters)
-    }
+    override fun getGlobalLetters(): Flow<List<Note>> = flowOf(dummyGlobalLetters)
 
-    // 3. Ambil riwayat lokal dari SQLDelight
     override fun getLetters(): Flow<List<Note>> {
         return queries.getAllNotes()
             .asFlow()
@@ -108,9 +108,6 @@ class LetterRepositoryImpl(
             .map { entities -> entities.map { it.toDomain() } }
     }
 
-    /**
-     * Hybrid Search: Mencari dari Database Lokal DAN 50 Data Dummy Global
-     */
     override fun searchLetters(query: String): Flow<List<Note>> {
         return getLetters().map { localNotes ->
             val filteredLocal = localNotes.filter { 
@@ -118,30 +115,26 @@ class LetterRepositoryImpl(
                 it.content.contains(query, ignoreCase = true) ||
                 it.songTitle?.contains(query, ignoreCase = true) == true
             }
-            
             val filteredDummy = dummyGlobalLetters.filter { 
                 it.recipient.contains(query, ignoreCase = true) || 
                 it.sender.contains(query, ignoreCase = true) ||
                 it.content.contains(query, ignoreCase = true) ||
-                it.songTitle?.contains(query, ignoreCase = true) == true ||
-                it.songArtist?.contains(query, ignoreCase = true) == true
+                it.songTitle?.contains(query, ignoreCase = true) == true
             }
-            
-            // Gabungkan hasil dan hilangkan duplikasi berdasarkan ID
             (filteredLocal + filteredDummy).distinctBy { it.id }
         }
     }
 
     override suspend fun sendLetter(letter: Note): Boolean {
-        // Simpan ke database lokal SQLDelight
+        // FIX: Simpan null beneran, jangan dipaksa string kosong
         queries.insertNote(
             recipient = letter.recipient,
             sender = letter.sender,
             content = letter.content,
             song_title = letter.songTitle,
             song_artist = letter.songArtist,
-            song_preview_url = letter.songPreviewUrl ?: "",
-            song_album_art_url = letter.songAlbumArtUrl ?: "",
+            song_preview_url = letter.songPreviewUrl,
+            song_album_art_url = letter.songAlbumArtUrl,
             category = letter.category.name,
             color = letter.color.name,
             is_pinned = if (letter.isPinned) 1L else 0L,
@@ -152,19 +145,11 @@ class LetterRepositoryImpl(
     }
 
     override suspend fun getLetterById(id: Long): Note? {
-        // Cek di dummy data dulu (ID negatif)
         if (id < 0) return dummyGlobalLetters.find { it.id == id }
-        
-        // Baru cek di database lokal
         return queries.getNoteById(id).executeAsOneOrNull()?.toDomain()
     }
 
-    override suspend fun deleteLetter(id: Long) {
-        queries.deleteNoteById(id)
-    }
+    override suspend fun deleteLetter(id: Long) = queries.deleteNoteById(id)
 
-    override suspend fun clearHistory() {
-        // Hanya menghapus NoteEntity di database lokal, data dummy global tetap aman
-        queries.deleteAllNotes()
-    }
+    override suspend fun clearHistory() = queries.deleteAllNotes()
 }

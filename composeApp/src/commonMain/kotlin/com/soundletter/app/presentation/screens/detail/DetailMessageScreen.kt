@@ -9,8 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,7 +38,7 @@ fun DetailMessageScreen(
     viewModel: DetailMessageScreenViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
-    val uiState by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsState()
     val isDarkMode by settingsViewModel.isDarkMode.collectAsState()
 
     LaunchedEffect(messageId) {
@@ -68,20 +67,19 @@ fun DetailMessageScreen(
                 .background(Brush.verticalGradient(SoundLetterColors.getBackgroundGradient(isDarkMode)))
                 .padding(padding)
         ) {
-            when (val state = uiState) {
+            when (val letterState = state.letterState) {
                 is UiState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
                 is UiState.Success -> {
-                    val message = state.data
-                    DetailContent(message)
+                    DetailContent(letterState.data, viewModel)
                 }
                 is UiState.Error -> {
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = state.message, color = Color.White)
+                        Text(text = letterState.message, color = Color.White)
                         Button(onClick = { viewModel.loadMessage(messageId) }) {
                             Text("Retry")
                         }
@@ -94,19 +92,21 @@ fun DetailMessageScreen(
 }
 
 @Composable
-private fun DetailContent(message: Note) {
+private fun DetailContent(message: Note, viewModel: DetailMessageScreenViewModel) {
+    val state by viewModel.state.collectAsState()
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        VinylRecord()
+        VinylRecord(isPlaying = state.isPlaying)
 
         Spacer(modifier = Modifier.height(32.dp))
 
         GlassCard(modifier = Modifier.fillMaxWidth()) {
-            Column {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "To: ${message.recipient}",
                     style = MaterialTheme.typography.titleLarge.copy(
@@ -131,26 +131,28 @@ private fun DetailContent(message: Note) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        MusicControls(message.songTitle ?: "Unknown Song")
+        MusicControls(message, viewModel)
     }
 }
 
 @Composable
-fun VinylRecord() {
-    val infiniteTransition = rememberInfiniteTransition()
+fun VinylRecord(isPlaying: Boolean) {
+    val infiniteTransition = rememberInfiniteTransition(label = "vinyl")
+    // Fix: Always use a non-zero duration to avoid division by zero crash
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
             animation = tween(5000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
-        )
+        ),
+        label = "rotation"
     )
 
     Box(
         modifier = Modifier
             .size(240.dp)
-            .rotate(rotation)
+            .rotate(if (isPlaying) rotation else 0f)
             .clip(CircleShape)
             .background(Color.Black)
             .border(4.dp, Color.DarkGray, CircleShape),
@@ -179,28 +181,52 @@ fun VinylRecord() {
 }
 
 @Composable
-fun MusicControls(songTitle: String) {
+fun MusicControls(message: Note, viewModel: DetailMessageScreenViewModel) {
+    val state by viewModel.state.collectAsState()
+    val hasPreview = !message.songPreviewUrl.isNullOrBlank()
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = songTitle,
+            text = message.songTitle ?: "Unknown Song",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.secondary
         )
-        Text(text = "Now Playing", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+        Text(
+            text = if (state.isPlaying) "Now Playing" else "Preview Audio",
+            style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            IconButton(onClick = {}) { Icon(Icons.Default.SkipPrevious, contentDescription = null, modifier = Modifier.size(32.dp)) }
-            FloatingActionButton(onClick = {}, containerColor = MaterialTheme.colorScheme.primary, shape = CircleShape) {
-                Icon(Icons.Default.Pause, contentDescription = null, tint = Color.Black)
+            FloatingActionButton(
+                onClick = { 
+                    if (hasPreview) viewModel.toggleAudio(message.songPreviewUrl) 
+                },
+                containerColor = if (hasPreview) MaterialTheme.colorScheme.primary else Color.Gray,
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = if (hasPreview) Color.Black else Color.DarkGray
+                )
             }
-            IconButton(onClick = {}) { Icon(Icons.Default.SkipNext, contentDescription = null, modifier = Modifier.size(32.dp)) }
         }
+        
+        if (!hasPreview) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Audio preview tidak tersedia",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+        
         Spacer(modifier = Modifier.height(24.dp))
         LinearProgressIndicator(
-            progress = { 0.4f },
+            progress = { if (state.isPlaying) 0.5f else 0f },
             modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
             color = MaterialTheme.colorScheme.primary,
             trackColor = Color.DarkGray
