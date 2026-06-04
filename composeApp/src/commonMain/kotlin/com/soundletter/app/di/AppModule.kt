@@ -1,6 +1,5 @@
 package com.soundletter.app.di
 
-import com.soundletter.app.core.network.ApiConfig
 import com.soundletter.app.core.network.GeminiService
 import com.soundletter.app.core.network.HttpClientFactory
 import com.soundletter.app.core.util.DatabaseDriverFactory
@@ -20,9 +19,6 @@ import com.soundletter.app.presentation.screens.home.HomeScreenViewModel
 import com.soundletter.app.presentation.screens.search.SearchScreenViewModel
 import com.soundletter.app.presentation.screens.splash.SplashScreenViewModel
 import com.soundletter.app.presentation.screens.settings.SettingsViewModel
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -35,22 +31,15 @@ val dataModule = module {
     }
     single { HttpClientFactory.create(enableLogging = true) }
     
-    // Inisialisasi Supabase Client Singleton
-    single<SupabaseClient> {
-        createSupabaseClient(
-            supabaseUrl = ApiConfig.supabaseUrl,
-            supabaseKey = ApiConfig.supabaseAnonKey
-        ) {
-            install(Postgrest)
-        }
-    }
+    // SupabaseClient removed for stability
     
     single { GeminiService(get()) }
 }
 
 val repositoryModule = module {
+    // LetterRepository sekarang hanya membutuhkan database lokal
     single<LetterRepository> { 
-        LetterRepositoryImpl(database = get(), supabase = get()) 
+        LetterRepositoryImpl(database = get())
     }
     
     singleOf(::UserRepositoryImpl) bind UserRepository::class

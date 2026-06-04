@@ -69,8 +69,7 @@ kotlin {
             implementation(libs.navigation.compose)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
-            implementation(libs.supabase.postgrest)
-            implementation(libs.supabase.realtime)
+            // Supabase removed
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
