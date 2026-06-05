@@ -1,12 +1,15 @@
 package com.soundletter.app.core.network
 
 /**
- * Expected configuration for API keys across platforms
+ * Unified Configuration for SoundLetter.
+ * Kita panggil BuildKonfig menggunakan Full Path tanpa import agar compiler tidak bingung 
+ * saat class sedang di-generate oleh plugin BuildKonfig.
  */
-expect object ApiConfig {
-    val geminiApiKey: String
-    val spotifyClientId: String
-    val spotifyClientSecret: String
-    val supabaseUrl: String
-    val supabaseAnonKey: String
+object ApiConfig {
+    // Memanggil langsung dari package yang didefinisikan di build.gradle.kts
+    val geminiApiKey: String 
+        get() = com.soundletter.app.BuildKonfig.GEMINI_API_KEY
+
+    val jamendoClientId: String 
+        get() = com.soundletter.app.BuildKonfig.JAMENDO_CLIENT_ID
 }

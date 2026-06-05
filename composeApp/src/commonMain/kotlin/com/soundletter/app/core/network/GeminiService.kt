@@ -35,10 +35,10 @@ data class GeminiCandidate(
 )
 
 class GeminiService(private val httpClient: HttpClient) {
-    // Bersihkan API Key dari karakter kutip atau spasi
+    // Gunakan ApiConfig yang membungkus BuildKonfig
     private val apiKey = ApiConfig.geminiApiKey.trim().replace("\"", "").replace("'", "")
     
-    // Menggunakan v1beta dengan model Gemini 2.5 Flash Lite (Sesuai permintaan)
+    // MENGGUNAKAN MODEL gemini-2.5-flash-lite SESUAI INSTRUKSI
     private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent"
 
     suspend fun getSongRecommendations(message: String): String {
@@ -59,7 +59,7 @@ class GeminiService(private val httpClient: HttpClient) {
             val result = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
             if (result.isNullOrBlank()) "Hati-Hati di Jalan - Tulus" else result.trim()
         } catch (e: Exception) {
-            println("AUDIO_LOG: Gemini failed: ${e.message}")
+            println("AUDIO_LOG: Gemini 2.5 Flash Lite failed: ${e.message}")
             "Tak Kan Ada Cinta yang Lain - Dewa 19"
         }
     }
