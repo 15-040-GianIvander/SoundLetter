@@ -35,7 +35,7 @@ class MusicRepositoryImpl(
                 // Menggunakan ApiConfig sebagai jembatan tunggal ke BuildKonfig
                 parameter("client_id", ApiConfig.jamendoClientId)
                 parameter("format", "json")
-                parameter("limit", "10") 
+                parameter("limit", "10")
                 parameter("search", query)
             }.body()
 

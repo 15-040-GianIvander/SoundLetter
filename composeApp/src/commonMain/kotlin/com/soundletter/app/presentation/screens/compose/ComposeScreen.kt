@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.soundletter.app.core.util.UiState
 import com.soundletter.app.presentation.components.LoadingView
 import com.soundletter.app.presentation.screens.settings.SettingsViewModel
@@ -35,15 +36,18 @@ fun ComposeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val contentColor = if (isDarkMode) Color.White else MaterialTheme.colorScheme.primary
+    val backgroundColor = if (isDarkMode) Color(0xFF000000) else Color(0xFFF0F8FF)
+    val primaryColor = if (isDarkMode) Color.White else Color(0xFF007ACC)
     
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = contentColor,
-        unfocusedBorderColor = contentColor.copy(alpha = 0.5f),
-        focusedLabelColor = contentColor,
-        unfocusedLabelColor = contentColor.copy(alpha = 0.7f),
+        focusedBorderColor = primaryColor,
+        unfocusedBorderColor = primaryColor.copy(alpha = 0.3f),
+        focusedLabelColor = primaryColor,
+        unfocusedLabelColor = Color.Gray,
         focusedTextColor = if (isDarkMode) Color.White else Color.Black,
-        unfocusedTextColor = if (isDarkMode) Color.White else Color.Black
+        unfocusedTextColor = if (isDarkMode) Color.White else Color.Black,
+        focusedContainerColor = if (isDarkMode) Color.White.copy(alpha = 0.05f) else Color.White,
+        unfocusedContainerColor = if (isDarkMode) Color.White.copy(alpha = 0.05f) else Color.White
     )
 
     // Handle UI Events
@@ -76,14 +80,14 @@ fun ComposeScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = backgroundColor,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Compose Letter", color = contentColor) },
+                title = { Text("Tulis Surat", fontWeight = FontWeight.Bold, color = primaryColor) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = contentColor)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = primaryColor)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -95,20 +99,20 @@ fun ComposeScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Bagian scrollable berisi input field
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(scrollState)
                     .padding(horizontal = 24.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 OutlinedTextField(
                     value = state.recipient,
                     onValueChange = { viewModel.onRecipientChange(it) },
                     label = { Text("Untuk") },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = textFieldColors
+                    colors = textFieldColors,
+                    singleLine = true
                 )
 
                 OutlinedTextField(
@@ -116,14 +120,15 @@ fun ComposeScreen(
                     onValueChange = { viewModel.onSenderChange(it) },
                     label = { Text("Dari (Opsional)") },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = textFieldColors
+                    colors = textFieldColors,
+                    singleLine = true
                 )
 
                 OutlinedTextField(
                     value = state.message,
                     onValueChange = { viewModel.onMessageChange(it) },
-                    label = { Text("Pesan") },
-                    modifier = Modifier.fillMaxWidth().height(150.dp),
+                    label = { Text("Isi Pesan") },
+                    modifier = Modifier.fillMaxWidth().height(160.dp),
                     colors = textFieldColors
                 )
 
@@ -134,23 +139,23 @@ fun ComposeScreen(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     ),
-                    enabled = !state.isAiLoading
+                    enabled = !state.isAiLoading,
+                    shape = MaterialTheme.shapes.medium
                 ) {
                     if (state.isAiLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     } else {
                         Icon(Icons.Default.AutoAwesome, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Rekomendasikan Lagu")
+                        Text("Dapatkan Saran Lagu AI")
                     }
                 }
 
-                // FIX: Gunakan tinggi tetap untuk LazyRow agar tidak hilang dalam Scroll
                 if (state.suggestions.isNotEmpty()) {
-                    Text("Pilih Lagu:", style = MaterialTheme.typography.labelMedium, color = contentColor)
+                    Text("Pilih Rekomendasi:", style = MaterialTheme.typography.labelLarge, color = primaryColor, fontWeight = FontWeight.Bold)
                     LazyRow(
-                        modifier = Modifier.fillMaxWidth().height(80.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(85.dp)
                     ) {
                         items(state.suggestions) { song ->
                             SongSuggestionCard(
@@ -164,13 +169,15 @@ fun ComposeScreen(
                 }
             }
 
-            // Tombol Kirim permanen di bawah
+            // Tombol Kirim Fix di bawah
             Button(
                 onClick = { viewModel.sendSoundLetter() },
                 modifier = Modifier.fillMaxWidth().padding(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                shape = MaterialTheme.shapes.large,
                 enabled = state.sendStatus !is UiState.Loading
             ) {
-                Text("Kirim Surat Musik", fontWeight = FontWeight.Bold)
+                Text("Kirim Surat Musik", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
             }
         }
         
@@ -184,28 +191,24 @@ fun ComposeScreen(
 fun SongSuggestionCard(song: SongSuggestion, isSelected: Boolean, isDarkMode: Boolean, onClick: () -> Unit) {
     ElevatedCard(
         onClick = onClick,
-        modifier = Modifier.width(160.dp).height(70.dp),
+        modifier = Modifier.width(160.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer 
+            containerColor = if (isSelected) Color(0xFF007ACC) 
                              else if (isDarkMode) Color.White.copy(alpha = 0.1f)
-                             else Color.White.copy(alpha = 0.8f)
+                             else Color.White
         )
     ) {
-        Column(modifier = Modifier.padding(8.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text = song.title, 
-                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold, 
                 maxLines = 1,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer 
-                        else if (isDarkMode) Color.White else Color.Black
+                color = if (isSelected) Color.White else if (isDarkMode) Color.White else Color.Black
             )
             Text(
                 text = song.artist, 
                 style = MaterialTheme.typography.labelSmall, 
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f) 
-                        else if (isDarkMode) Color.White.copy(alpha = 0.6f) 
-                        else Color.DarkGray
+                color = if (isSelected) Color.White.copy(alpha = 0.8f) else Color.Gray
             )
         }
     }

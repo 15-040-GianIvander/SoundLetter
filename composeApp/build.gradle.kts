@@ -89,7 +89,7 @@ buildkonfig {
     defaultConfigs {
         val jamendoId = (localProperties.getProperty("JAMENDO_CLIENT_ID") ?: "cbb32072").replace("\"", "")
         val geminiKey = (localProperties.getProperty("GEMINI_API_KEY") ?: "").replace("\"", "")
-        
+
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "JAMENDO_CLIENT_ID", "\"$jamendoId\"")
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "GEMINI_API_KEY", "\"$geminiKey\"")
     }
