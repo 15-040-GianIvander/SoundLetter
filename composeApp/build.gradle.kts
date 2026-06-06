@@ -18,8 +18,11 @@ val localProperties = Properties().apply {
     }
 }
 
+// Ambil value di luar agar blok buildkonfig statis
+val jamendoIdValue = (localProperties.getProperty("JAMENDO_CLIENT_ID") ?: "cbb32072").replace("\"", "")
+val geminiKeyValue = (localProperties.getProperty("GEMINI_API_KEY") ?: "").replace("\"", "")
+
 kotlin {
-    // FIX 1: Registrasi Android Target secara eksplisit
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
@@ -74,6 +77,14 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
         }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.turbine)
+            implementation(libs.ktor.client.mock)
+        }
+
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.koin.android)
@@ -83,15 +94,11 @@ kotlin {
     }
 }
 
-// FIX 2: Konfigurasi BuildKonfig yang robust (Hapus exposeObject)
 buildkonfig {
     packageName = "com.soundletter.app"
     defaultConfigs {
-        val jamendoId = (localProperties.getProperty("JAMENDO_CLIENT_ID") ?: "cbb32072").replace("\"", "")
-        val geminiKey = (localProperties.getProperty("GEMINI_API_KEY") ?: "").replace("\"", "")
-
-        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "JAMENDO_CLIENT_ID", "\"$jamendoId\"")
-        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "GEMINI_API_KEY", "\"$geminiKey\"")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "JAMENDO_CLIENT_ID", "\"$jamendoIdValue\"")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "GEMINI_API_KEY", "\"$geminiKeyValue\"")
     }
 }
 
@@ -108,7 +115,6 @@ android {
     buildFeatures { buildConfig = true }
 }
 
-// FIX 3: Tambahkan konfigurasi database SQLDelight agar tidak warning
 sqldelight {
     databases {
         create("SoundLetterDatabase") {

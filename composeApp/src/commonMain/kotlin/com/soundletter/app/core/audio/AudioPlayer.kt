@@ -1,6 +1,6 @@
 package com.soundletter.app.core.audio
 
-expect class AudioPlayer {
+interface AudioPlayer {
     fun play(url: String, onFinished: () -> Unit = {})
     fun pause()
     fun stop()

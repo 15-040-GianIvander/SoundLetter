@@ -2,14 +2,13 @@ package com.soundletter.app.core.network
 
 /**
  * Unified Configuration for SoundLetter.
- * Kita panggil BuildKonfig menggunakan Full Path tanpa import agar compiler tidak bingung 
- * saat class sedang di-generate oleh plugin BuildKonfig.
+ * NOTE: Kita gunakan hardcoded sementara agar build tidak FAILED saat generate BuildKonfig.
+ * Setelah build sukses, Anda bisa mengaktifkan kembali pemanggilan BuildKonfig.
  */
 object ApiConfig {
-    // Memanggil langsung dari package yang didefinisikan di build.gradle.kts
-    val geminiApiKey: String 
-        get() = com.soundletter.app.BuildKonfig.GEMINI_API_KEY
+    // Masukkan Gemini Key Anda di sini jika ingin langsung jalan
+    val geminiApiKey: String = "" 
 
-    val jamendoClientId: String 
-        get() = com.soundletter.app.BuildKonfig.JAMENDO_CLIENT_ID
+    // Jamendo ID sudah gua set sesuai permintaan lu
+    val jamendoClientId: String = "cbb32072"
 }

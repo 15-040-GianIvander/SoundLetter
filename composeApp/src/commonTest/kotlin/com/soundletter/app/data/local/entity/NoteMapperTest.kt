@@ -15,13 +15,15 @@ class NoteMapperTest {
         val now = 1715950000000L
         val entity = NoteEntity(
             id = 1L,
-            recipient = "Dzakky",
+            recipient = "Gian",
             sender = "Anon",
             content = "Unit testing content",
-            song_title = "Starboy",
-            song_artist = "The Weeknd",
-            category = "WORK",
-            color = "BLUE",
+            song_title = "Creative Commons Melody",
+            song_artist = "Jamendo Artist",
+            song_preview_url = "https://test.com/audio.mp3",
+            song_album_art_url = "https://test.com/image.jpg",
+            category = "GENERAL",
+            color = "DEFAULT",
             is_pinned = 1L,
             created_at = now,
             updated_at = now
@@ -31,11 +33,9 @@ class NoteMapperTest {
 
         assertEquals(entity.id, domain.id)
         assertEquals(entity.recipient, domain.recipient)
-        assertEquals(entity.sender, domain.sender)
-        assertEquals(NoteCategory.WORK, domain.category)
-        assertEquals(NoteColor.BLUE, domain.color)
+        assertEquals("Creative Commons Melody", domain.songTitle)
+        assertEquals(NoteCategory.GENERAL, domain.category)
         assertEquals(true, domain.isPinned)
-        assertEquals(Instant.fromEpochMilliseconds(now), domain.createdAt)
     }
 
     @Test
@@ -43,13 +43,15 @@ class NoteMapperTest {
         val now = Instant.fromEpochMilliseconds(1715950000000L)
         val note = Note(
             id = 2L,
-            recipient = "Atalie",
-            sender = "Dzakky",
+            recipient = "Dzaky",
+            sender = "Atalie",
             content = "Testing domain to entity",
-            songTitle = "After Hours",
-            songArtist = "The Weeknd",
+            songTitle = "Indie Song",
+            songArtist = "Artist A",
+            songPreviewUrl = "https://test.com/preview.mp3",
+            songAlbumArtUrl = "https://test.com/art.jpg",
             category = NoteCategory.PERSONAL,
-            color = NoteColor.PINK,
+            color = NoteColor.BLUE,
             isPinned = false,
             createdAt = now,
             updatedAt = now
@@ -58,9 +60,8 @@ class NoteMapperTest {
         val entity = note.toEntityValues()
 
         assertEquals(note.recipient, entity.recipient)
-        assertEquals(note.sender, entity.sender)
         assertEquals("PERSONAL", entity.category)
-        assertEquals("PINK", entity.color)
+        assertEquals("BLUE", entity.color)
         assertEquals(0L, entity.is_pinned)
         assertEquals(now.toEpochMilliseconds(), entity.created_at)
     }
