@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.kover)
 }
 
 val localProperties = Properties().apply {
@@ -18,7 +19,6 @@ val localProperties = Properties().apply {
     }
 }
 
-// Ambil value di luar agar blok buildkonfig statis
 val jamendoIdValue = (localProperties.getProperty("JAMENDO_CLIENT_ID") ?: "cbb32072").replace("\"", "")
 val geminiKeyValue = (localProperties.getProperty("GEMINI_API_KEY") ?: "").replace("\"", "")
 
@@ -91,6 +91,14 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.android.driver)
         }
+
+        val androidInstrumentedTest by getting {
+            dependencies {
+                implementation(libs.androidx.test.junit)
+                implementation(libs.compose.ui.test)
+                implementation(libs.compose.ui.test.junit4)
+            }
+        }
     }
 }
 
@@ -111,14 +119,36 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { buildConfig = true }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+}
+
+dependencies {
+    debugImplementation(libs.compose.ui.test.manifest)
 }
 
 sqldelight {
     databases {
         create("SoundLetterDatabase") {
             packageName.set("com.soundletter.app.data.local")
+        }
+    }
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                classes("*.BuildConfig", "*.BR", "*_Factory", "*_MembersInjector")
+            }
         }
     }
 }

@@ -30,24 +30,22 @@ val dataModule = module {
         SoundLetterDatabase(driverFactory.createDriver())
     }
     single { HttpClientFactory.create(enableLogging = true) }
-    
-    // SupabaseClient removed for stability
-    
     single { GeminiService(get()) }
 }
 
 val repositoryModule = module {
-    // LetterRepository sekarang hanya membutuhkan database lokal
+    // Menggunakan LetterRepository (Bukan SoundLetterRepository)
     single<LetterRepository> { 
         LetterRepositoryImpl(database = get())
     }
     
     singleOf(::UserRepositoryImpl) bind UserRepository::class
     singleOf(::MusicRepositoryImpl) bind MusicRepository::class
-    single<PreferenceRepository> { PreferenceRepositoryImpl() }
+    singleOf(::PreferenceRepositoryImpl) bind PreferenceRepository::class
 }
 
 val viewModelModule = module {
+    // Injeksi ViewModel per layar
     viewModelOf(::SplashScreenViewModel)
     viewModelOf(::HomeScreenViewModel)
     viewModelOf(::SearchScreenViewModel)

@@ -7,7 +7,7 @@ package com.soundletter.app.core.network
  */
 object ApiConfig {
     // Masukkan Gemini Key Anda di sini jika ingin langsung jalan
-    val geminiApiKey: String = "" 
+    val geminiApiKey: String = "AIzaSyBM9H9uN6jtjHrgZqobyJ6X1CpKqsUx6BY"
 
     // Jamendo ID sudah gua set sesuai permintaan lu
     val jamendoClientId: String = "cbb32072"
