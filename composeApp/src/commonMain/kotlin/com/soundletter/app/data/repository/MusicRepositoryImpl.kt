@@ -27,21 +27,22 @@ class MusicRepositoryImpl(
     private val httpClient: HttpClient
 ) : MusicRepository {
 
-    override suspend fun searchSongs(query: String): List<MusicTrack> {
+    override suspend fun searchSongs(mood: String): List<MusicTrack> {
         return try {
-            println("JAMENDO_LOG: Searching for '$query'...")
-            
+            // Jamendo API bekerja lebih baik dengan format tag1+tag2 untuk fuzzytags
+            val formattedTags = mood.trim().replace(" ", "+")
+            println("JAMENDO_LOG: Searching for tags: $formattedTags")
+
             val response: JamendoResponse = httpClient.get("https://api.jamendo.com/v3.0/tracks/") {
-                // Menggunakan ApiConfig sebagai jembatan tunggal ke BuildKonfig
                 parameter("client_id", ApiConfig.jamendoClientId)
                 parameter("format", "json")
                 parameter("limit", "10")
-                parameter("search", query)
+                // Menggunakan fuzzytags untuk pencarian berbasis Mood/Genre agar hasil lebih bervariasi
+                parameter("fuzzytags", formattedTags)
+                parameter("boost", "popularity_month")
             }.body()
 
-            if (response.results.isEmpty()) {
-                throw Exception("Track not found")
-            }
+            if (response.results.isEmpty()) throw Exception("No tracks found for tags")
 
             response.results.map { track ->
                 MusicTrack(
@@ -53,11 +54,11 @@ class MusicRepositoryImpl(
             }
         } catch (e: Exception) {
             println("JAMENDO_LOG: Error: ${e.message}")
-            // FALLBACK: Jaminan data selalu muncul meski API mati
+            // Fallback data tetap ada agar UI tidak pecah
             listOf(
                 MusicTrack(
-                    title = "Creative Commons Melody",
-                    artist = "Jamendo Artist (Fallback)",
+                    title = "Ambient Peace",
+                    artist = "Jamendo Artist",
                     previewUrl = "https://prod-1.storage.jamendo.com/download/track/1885566/mp32/",
                     albumArtUrl = "https://picsum.photos/seed/music/300/300"
                 )
