@@ -261,6 +261,7 @@ class LetterRepositoryImpl(
         return getLetters().map { localNotes ->
             val filteredLocal = localNotes.filter {
                 it.recipient.contains(query, ignoreCase = true) ||
+<<<<<<< HEAD
                 it.content.contains(query, ignoreCase = true) ||
                 it.songTitle?.contains(query, ignoreCase = true) == true
             }
@@ -269,6 +270,16 @@ class LetterRepositoryImpl(
                 it.sender.contains(query, ignoreCase = true) ||
                 it.content.contains(query, ignoreCase = true) ||
                 it.songTitle?.contains(query, ignoreCase = true) == true
+=======
+                        it.content.contains(query, ignoreCase = true) ||
+                        it.songTitle?.contains(query, ignoreCase = true) == true
+            }
+            val filteredDummy = dummyGlobalLetters.filter {
+                it.recipient.contains(query, ignoreCase = true) ||
+                        it.sender.contains(query, ignoreCase = true) ||
+                        it.content.contains(query, ignoreCase = true) ||
+                        it.songTitle?.contains(query, ignoreCase = true) == true
+>>>>>>> 5a2057e (feat: implement mood-based music engine)
             }
             (filteredLocal + filteredDummy).distinctBy { it.id }
         }
