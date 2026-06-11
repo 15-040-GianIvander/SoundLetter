@@ -29,8 +29,8 @@ class MusicRepositoryImplTest {
         val result = repository.searchSongs("any query")
 
         assertTrue(result.isNotEmpty())
-        assertEquals("Ambient Peace", result[0].title)
-        assertEquals("Jamendo Artist", result[0].artist)
+        assertEquals("Ambient Gold", result[0].title)
+        assertEquals("AudioCoffee", result[0].artist)
     }
 
     @Test

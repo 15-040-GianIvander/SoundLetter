@@ -29,20 +29,17 @@ class MusicRepositoryImpl(
 
     override suspend fun searchSongs(mood: String): List<MusicTrack> {
         return try {
-            // Jamendo API bekerja lebih baik dengan format tag1+tag2 untuk fuzzytags
             val formattedTags = mood.trim().replace(" ", "+")
-            println("JAMENDO_LOG: Searching for tags: $formattedTags")
-
+            
             val response: JamendoResponse = httpClient.get("https://api.jamendo.com/v3.0/tracks/") {
                 parameter("client_id", ApiConfig.jamendoClientId)
                 parameter("format", "json")
                 parameter("limit", "10")
-                // Menggunakan fuzzytags untuk pencarian berbasis Mood/Genre agar hasil lebih bervariasi
                 parameter("fuzzytags", formattedTags)
                 parameter("boost", "popularity_month")
             }.body()
 
-            if (response.results.isEmpty()) throw Exception("No tracks found for tags")
+            if (response.results.isEmpty()) throw Exception("No tracks found")
 
             response.results.map { track ->
                 MusicTrack(
@@ -53,13 +50,12 @@ class MusicRepositoryImpl(
                 )
             }
         } catch (e: Exception) {
-            println("JAMENDO_LOG: Error: ${e.message}")
-            // Fallback data tetap ada agar UI tidak pecah
+            // Fallback dengan lagu Jamendo yang valid jika API error
             listOf(
                 MusicTrack(
-                    title = "Ambient Peace",
-                    artist = "Jamendo Artist",
-                    previewUrl = "https://prod-1.storage.jamendo.com/download/track/1885566/mp32/",
+                    title = "Ambient Gold",
+                    artist = "AudioCoffee",
+                    previewUrl = "https://www.jamendo.com/track/1885903/get/stream",
                     albumArtUrl = "https://picsum.photos/seed/music/300/300"
                 )
             )
