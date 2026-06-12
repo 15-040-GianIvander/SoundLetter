@@ -124,6 +124,35 @@ android {
     }
     buildFeatures { buildConfig = true }
 
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+
+    signingConfigs {
+        create("release") {
+            val keyPath = localProperties.getProperty("KEY_PATH")
+            if (keyPath != null) {
+                storeFile = rootProject.file(keyPath.replace("../", ""))
+            }
+            storePassword = localProperties.getProperty("KEY_PASSWORD")
+            keyAlias = localProperties.getProperty("KEY_ALIAS")
+            keyPassword = localProperties.getProperty("KEY_ALIAS_PASSWORD")
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
