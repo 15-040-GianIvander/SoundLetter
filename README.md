@@ -41,7 +41,6 @@ Integrasi dengan **Jamendo API** menggunakan parameter `fuzzytags` untuk mendapa
 
 ### 4. Global Feed & Interactive Search
 *   **Global Feed:** Menampilkan daftar pesan terbaru secara publik dengan desain kartu *Glassmorphism*.
-*   **25 Aesthetic Dummy Data:** Dilengkapi dengan 25 data anonim estetik yang sudah dikurasi, lengkap dengan audio yang dapat diputar penuh.
 *   **Inbox Search:** Fitur pencarian dinamis untuk menemukan pesan berdasarkan nama penerima atau potongan lirik lagu.
 
 ---
