@@ -3,14 +3,26 @@
 
 SoundLetter adalah aplikasi mobile **Kotlin Multiplatform (KMP)** inovatif yang menggabungkan ekspresi emosional melalui pesan anonim dengan integrasi musik pintar. Terinspirasi dari tren "Send the Song", SoundLetter memungkinkan pengguna mengirimkan "surat digital" yang dilengkapi dengan lagu sebagai representasi perasaan mereka secara anonim di platform Android dan iOS.
 
+[![Download APK](https://img.shields.io/badge/Download-APK-green?style=for-the-badge&logo=android)](https://drive.google.com/file/d/134SwvWaqlfksseD-An112zAO_0rF5MI8/view?usp=sharing)
+
 ---
 
 ## 📺 Video Demo
 Klik thumbnail di bawah ini untuk melihat demo aplikasi SoundLetter di YouTube:
 
-[![Tonton Video Demo](https://img.youtube.com/vi/PLACEHOLDER_ID/0.jpg)](https://www.youtube.com/watch?v=PLACEHOLDER_ID)
+[![Tonton Video Demo](https://img.youtube.com/vi/QGcQY_dNWg/0.jpg)](https://www.youtube.com/watch?v=QGcQY_dNWg)
 
-*(Silakan ganti `PLACEHOLDER_ID` dengan ID Video YouTube Anda)*
+---
+
+## 📸 Tampilan Aplikasi
+
+| Halaman | Light Mode | Dark Mode |
+| :--- | :---: | :---: |
+| **Home** | <img src="Screenshot/Home%20LM.jpg" width="200"> | <img src="Screenshot/Home%20DM.jpg" width="200"> |
+| **Search** | <img src="Screenshot/Search%20LM.jpg" width="200"> | <img src="Screenshot/Search%20DM.jpg" width="200"> |
+| **Input Data** | <img src="Screenshot/Input%20data%20LM.jpg" width="200"> | <img src="Screenshot/Input%20data%20DM.jpg" width="200"> |
+| **History** | <img src="Screenshot/History%20LM.jpg" width="200"> | <img src="Screenshot/History%20DM.jpg" width="200"> |
+| **Setting** | <img src="Screenshot/Setting%20LM.jpg" width="200"> | <img src="Screenshot/Setting%20DM.jpg" width="200"> |
 
 ---
 
@@ -58,6 +70,8 @@ SoundLetter menjamin stabilitas melalui pengujian menyeluruh:
     *   **Class Coverage:** 68.3%
     *   **ViewModel Line Coverage:** 97% (Menjamin logika UI state yang sangat stabil).
 
+![Hasil Coverage](Screenshot/Hasil%20Coverage.jpeg)
+
 ---
 
 ## 📂 Struktur Proyek Utama
@@ -98,8 +112,10 @@ JAMENDO_CLIENT_ID=your_jamendo_client_id_here
 ---
 
 ## 👥 Tim Pengembang (Kelompok Sprint 4)
-* (123140027) ATALIE SALSABILA
-* (123140039) MUHAMMAD DZAKY
-* (123140040) GIAN IVANDER
+
+* **(123140027) ATALIE SALSABILA — Project Architect & Documentation Lead**
+* **(123140039) MUHAMMAD DZAKY — Lead UI/UX Developer & Quality Assurance**
+* **(123140040) GIAN IVANDER — Systems Integrator & Core Logic Developer**
+
 ---
 Copyright © 2024 SoundLetter Team.
