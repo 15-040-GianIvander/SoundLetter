@@ -10,7 +10,7 @@ SoundLetter adalah aplikasi mobile **Kotlin Multiplatform (KMP)** inovatif yang 
 ## 📺 Video Demo
 Klik thumbnail di bawah ini untuk melihat demo aplikasi SoundLetter di YouTube:
 
-[![Tonton Video Demo](https://img.youtube.com/vi/QGcQY_dNWg/0.jpg)](https://www.youtube.com/watch?v=QGcQY_dNWg)
+[![Tonton Video Demo](https://img.youtube.com/vi/QGcQY_dNWg/0.jpg)](https://youtu.be/QGXcQY_dNWg?si=6Es0jr8UJNRlS316)
 
 ---
 
