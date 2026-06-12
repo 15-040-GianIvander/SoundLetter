@@ -147,7 +147,21 @@ kover {
     reports {
         filters {
             excludes {
-                classes("*.BuildConfig", "*.BR", "*_Factory", "*_MembersInjector")
+                classes(
+                    "*.BuildConfig",
+                    "*.BR",
+                    "*_Factory",
+                    "*_MembersInjector",
+                    "com.soundletter.app.presentation.components.*",
+                    "com.soundletter.app.presentation.navigation.*",
+                    "com.soundletter.app.presentation.theme.*",
+                    "com.soundletter.app.di.*",
+                    "soundletter.composeapp.generated.resources.*",
+                    "**.*Screen*",
+                    "**.App*",
+                    "**.MainActivity*",
+                    "com.soundletter.app.core.audio.*"
+                )
             }
         }
     }
